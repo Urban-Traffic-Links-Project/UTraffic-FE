@@ -1,0 +1,811 @@
+:root {
+  --header-height: 72px;
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 88px;
+}
+
+.page {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  background: #edf1f5;
+  overflow: hidden;
+}
+
+.pageCollapsed {
+  grid-template-columns: var(--sidebar-collapsed-width) minmax(0, 1fr);
+}
+
+.sidebar {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.25s ease, color 0.25s ease;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.sidebarCollapsed {
+  width: 100%;
+}
+
+.sidebarDark {
+  background: #0f2241;
+  color: #ffffff;
+}
+
+.sidebarLight {
+  background: #ffffff;
+  color: #1f2937;
+  border-right: 1px solid #dbe2ea;
+}
+
+.sidebarTop {
+  padding: 18px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sidebarToggle {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  align-self: flex-end;
+  transition: background 0.2s ease;
+}
+
+.sidebarToggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebarLight .sidebarToggle:hover {
+  background: rgba(15, 34, 65, 0.08);
+}
+
+.sidebarTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  padding: 0 8px;
+}
+
+.sidebarNav {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebarNavItem {
+  width: 100%;
+  min-height: 56px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.sidebarNavItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebarLight .sidebarNavItem:hover {
+  background: rgba(15, 34, 65, 0.08);
+}
+
+.sidebarNavItemActive {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.sidebarLight .sidebarNavItemActive {
+  background: #e9f0f8;
+}
+
+.sidebarNavIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+}
+
+.sidebarNavLabel {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sidebarCollapsed .sidebarNavItem {
+  justify-content: center;
+  padding: 0;
+}
+
+.sidebarBottom {
+  margin-top: auto;
+  padding: 16px;
+}
+
+.themeSwitcher {
+  width: 100%;
+  border-radius: 18px;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebarLight .themeSwitcher {
+  background: #eef3f8;
+}
+
+.themeButton {
+  height: 42px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.themeButtonActive {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.sidebarLight .themeButtonActive {
+  background: #dbe8f5;
+}
+
+.sidebarCollapsed .themeSwitcher {
+  grid-template-columns: 1fr;
+}
+
+.contentArea {
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+.mapView,
+.statsView {
+  width: 100%;
+  height: 100%;
+}
+
+.mapPanel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #f4efe1;
+  box-shadow: none;
+}
+
+.searchBar {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 5;
+  width: 320px;
+  height: 48px;
+  background: #ffffff;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  box-shadow: 0 6px 18px rgba(15, 34, 65, 0.12);
+}
+
+.searchIcon {
+  color: #6b7280;
+  margin-right: 10px;
+}
+
+.searchBar input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 15px;
+  color: #374151;
+}
+
+.mapCanvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.fakeMap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background:
+    linear-gradient(90deg, rgba(181, 195, 211, 0.45) 2px, transparent 2px),
+    linear-gradient(rgba(181, 195, 211, 0.45) 2px, transparent 2px),
+    #f2ebdb;
+  background-size: 120px 120px, 120px 120px, auto;
+  overflow: hidden;
+}
+
+.mapStreetGrid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(35deg, transparent 49%, rgba(145, 160, 180, 0.25) 50%, transparent 51%),
+    linear-gradient(-25deg, transparent 49%, rgba(145, 160, 180, 0.22) 50%, transparent 51%);
+  opacity: 0.55;
+}
+
+.trafficRoad {
+  position: absolute;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55);
+}
+
+.roadOne {
+  width: 760px;
+  height: 16px;
+  top: 430px;
+  left: -40px;
+  transform: rotate(28deg);
+  background: linear-gradient(
+    90deg,
+    #16c784 0%,
+    #16c784 25%,
+    #f4c430 50%,
+    #ea4335 75%,
+    #b71c1c 100%
+  );
+}
+
+.roadTwo {
+  width: 800px;
+  height: 14px;
+  top: 180px;
+  left: 280px;
+  transform: rotate(-46deg);
+  background: linear-gradient(
+    90deg,
+    #16c784 0%,
+    #16c784 18%,
+    #f4c430 36%,
+    #ea4335 60%,
+    #8b1e1e 100%
+  );
+}
+
+.roadThree {
+  width: 620px;
+  height: 14px;
+  top: 330px;
+  left: 170px;
+  transform: rotate(-60deg);
+  background: linear-gradient(
+    90deg,
+    #16c784 0%,
+    #16c784 34%,
+    #f4c430 46%,
+    #ea4335 72%,
+    #8b1e1e 100%
+  );
+}
+
+.roadFour {
+  width: 520px;
+  height: 12px;
+  top: 240px;
+  left: -80px;
+  transform: rotate(28deg);
+  background: linear-gradient(
+    90deg,
+    #ea4335 0%,
+    #b71c1c 24%,
+    #16c784 56%,
+    #16c784 100%
+  );
+}
+
+.roadFive {
+  width: 580px;
+  height: 12px;
+  top: 525px;
+  left: 540px;
+  transform: rotate(-36deg);
+  background: linear-gradient(
+    90deg,
+    #16c784 0%,
+    #16c784 22%,
+    #f4c430 48%,
+    #ea4335 74%,
+    #b71c1c 100%
+  );
+}
+
+.roundabout {
+  position: absolute;
+  width: 62px;
+  height: 62px;
+  top: 402px;
+  left: 344px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f8f5eb 24%, #d9a441 25%, #d9a441 44%, #b71c1c 45%, #b71c1c 100%);
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.6);
+}
+
+.busStop {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #55708f;
+  box-shadow: 0 4px 10px rgba(15, 34, 65, 0.12);
+}
+
+.busStop::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: #55708f;
+}
+
+.stopOne {
+  top: 312px;
+  left: 122px;
+}
+
+.stopTwo {
+  top: 560px;
+  left: 286px;
+}
+
+.stopThree {
+  top: 298px;
+  right: 160px;
+}
+
+.stopFour {
+  bottom: 165px;
+  right: 318px;
+}
+
+.pointMarker {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: #8b5cf6;
+  box-shadow: 0 6px 14px rgba(139, 92, 246, 0.3);
+}
+
+.pointMarker::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  top: 7px;
+  left: 7px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.markerOne {
+  top: 120px;
+  right: 230px;
+}
+
+.markerTwo {
+  top: 490px;
+  right: 240px;
+}
+
+.markerThree {
+  top: 150px;
+  left: 620px;
+}
+
+.mapBottomControls {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mapSelectButton {
+  height: 48px;
+  border: none;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #2f3a45;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(15, 34, 65, 0.12);
+}
+
+.legendBox {
+  min-height: 48px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  box-shadow: 0 6px 18px rgba(15, 34, 65, 0.12);
+}
+
+.legendText {
+  font-size: 15px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.legendColors {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legendColor {
+  width: 34px;
+  height: 12px;
+}
+
+.legendGreen {
+  background: #16c784;
+}
+
+.legendYellow {
+  background: #f4c430;
+}
+
+.legendOrange {
+  background: #ea4335;
+}
+
+.legendRed {
+  background: #b71c1c;
+}
+
+.liveToggle {
+  width: 64px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: #d9e4ea;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(15, 34, 65, 0.12);
+}
+
+.liveToggleDot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #10b4c8;
+}
+
+.statsView {
+  min-height: 0;
+  padding: 24px;
+  background: #f5f7fb;
+  overflow: auto;
+}
+
+.statsHeader {
+  margin-bottom: 24px;
+}
+
+.statsHeader h2 {
+  font-size: 34px;
+  line-height: 1.2;
+  color: #243447;
+  margin-bottom: 8px;
+}
+
+.statsHeader p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #667085;
+  max-width: 760px;
+}
+
+.statsCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.statCard {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  box-shadow: 0 8px 24px rgba(15, 34, 65, 0.06);
+}
+
+.statCardIcon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: #ebf4ff;
+  color: #245c9f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statCardContent h3 {
+  font-size: 18px;
+  color: #243447;
+  margin-bottom: 6px;
+}
+
+.statCardContent strong {
+  display: block;
+  font-size: 28px;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.statCardContent p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #667085;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 18px;
+}
+
+.chartCard,
+.tableCard {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(15, 34, 65, 0.06);
+}
+
+.blockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.blockHeader h3 {
+  font-size: 20px;
+  color: #243447;
+}
+
+.blockHeader span {
+  font-size: 14px;
+  color: #667085;
+}
+
+.barChart {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.barItem {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: 14px;
+}
+
+.barItem span {
+  font-size: 14px;
+  color: #667085;
+}
+
+.barTrack {
+  height: 14px;
+  border-radius: 999px;
+  background: #edf2f7;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #16c784 0%, #f4c430 55%, #ea4335 100%);
+}
+
+.bar1 {
+  width: 42%;
+}
+
+.bar2 {
+  width: 78%;
+}
+
+.bar3 {
+  width: 54%;
+}
+
+.bar4 {
+  width: 63%;
+}
+
+.bar5 {
+  width: 88%;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dataTable th,
+.dataTable td {
+  text-align: left;
+  padding: 14px 12px;
+  border-bottom: 1px solid #e8edf3;
+  font-size: 14px;
+}
+
+.dataTable th {
+  color: #475467;
+  font-weight: 700;
+  background: #fbfcfe;
+}
+
+.dataTable td {
+  color: #344054;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.statusDanger {
+  background: #fee2e2;
+  color: #b42318;
+}
+
+.statusWarning {
+  background: #fef3c7;
+  color: #b54708;
+}
+
+.statusSuccess {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+@media (max-width: 1200px) {
+  .statsCards {
+    grid-template-columns: 1fr;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 992px) {
+  .page,
+  .pageCollapsed {
+    grid-template-columns: var(--sidebar-collapsed-width) minmax(0, 1fr);
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .sidebarTitleRow,
+  .sidebarNavLabel,
+  .themeButton span {
+    display: none;
+  }
+
+  .sidebarNavItem {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .themeSwitcher {
+    grid-template-columns: 1fr;
+  }
+
+  .searchBar {
+    width: calc(100% - 36px);
+  }
+
+  .mapBottomControls {
+    left: 18px;
+    right: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .searchBar {
+    height: 44px;
+  }
+
+  .statsView {
+    padding: 16px;
+  }
+
+  .statsHeader h2 {
+    font-size: 28px;
+  }
+
+  .mapBottomControls {
+    gap: 10px;
+  }
+
+  .mapSelectButton,
+  .legendBox {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .liveToggle {
+    margin-left: auto;
+  }
+}

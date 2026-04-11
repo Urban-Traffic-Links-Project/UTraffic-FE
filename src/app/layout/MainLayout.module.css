@@ -1,0 +1,21 @@
+.layout {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainNormal {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.mainFull {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}

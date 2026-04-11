@@ -1,0 +1,133 @@
+.footer {
+  background: #263238;         /* giống mẫu */
+  color: #ffffff;
+  padding: 48px 0;
+}
+
+.container {
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+  gap: 48px;
+  align-items: start;
+}
+
+/* Left */
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandText {
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: 0.2px;
+}
+
+.muted {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+}
+
+.socialRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.socialBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+.socialBtn:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Columns */
+.colTitle {
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.links {
+  display: grid;
+  gap: 12px;
+}
+
+.link {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.link:hover {
+  color: #ffffff;
+}
+
+/* Email input */
+.emailBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  max-width: 320px;
+}
+
+.emailInput {
+  flex: 1;
+  color: #fff;
+  font-size: 14px;
+}
+
+.emailInput input::placeholder {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.sendBtn {
+  color: #ffffff !important;
+}
+
+.logo {
+  position: relative;
+  width: 34px;
+  height: 34px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .emailBox {
+    max-width: 100%;
+  }
+}
