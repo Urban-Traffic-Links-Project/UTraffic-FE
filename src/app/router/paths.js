@@ -5,4 +5,5 @@ export const PATHS = {
   predict: "/predict",
   login: "/login",
   signup: "/signup",
+  admin: "/admin",
 };

@@ -26,7 +26,7 @@ function IllustrationPlaceholder() {
             sx={{
               width: '100%',
               height: 'auto',
-              maxWidth: '480px', // Giới hạn kích thước nếu cần
+              maxWidth: '480px',
             }}
           />
       </Box>
@@ -62,7 +62,6 @@ export function RegisterPage() {
           {/* LEFT: Form card */}
           <Card className={styles.card} elevation={0}>
             <CardContent className={styles.cardContent}>
-              <Typography className={styles.welcome}>Welcome!</Typography>
 
               <Typography className={styles.title}>Sign up to HCMTraffic</Typography>
 

@@ -60,7 +60,6 @@ export function LoginPage() {
           {/* LEFT: form */}
           <Card className={styles.card} elevation={0}>
             <CardContent className={styles.cardContent}>
-              <Typography className={styles.welcome}>Welcome!</Typography>
 
               <Typography className={styles.title}>Login to HCMTraffic</Typography>
 

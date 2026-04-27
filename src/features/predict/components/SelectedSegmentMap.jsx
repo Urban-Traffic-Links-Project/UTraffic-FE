@@ -153,14 +153,6 @@ export function SelectedSegmentMap({ selected }) {
 
   return (
     <Box className={styles.mapBlock}>
-      <Box className={styles.mapMeta}>
-        <Typography className={styles.mapTitle}>
-          Selected road segment
-        </Typography>
-        <Typography className={styles.mapSubtitle}>
-          {selected?.name || "No segment selected"}
-        </Typography>
-      </Box>
 
       <Box className={styles.mapShell}>
         <MapContainer
@@ -200,9 +192,7 @@ export function SelectedSegmentMap({ selected }) {
         {!path.length && !center ? (
           <Box className={styles.mapOverlayHint}>
             <Typography className={styles.caption}>
-              Segment data does not contain map coordinates yet.
-              Add <strong>center</strong>, <strong>coordinates</strong>, or
-              GeoJSON <strong>geometry</strong> to display the selected road segment.
+              Please select the route you want to predict.
             </Typography>
           </Box>
         ) : null}

@@ -23,15 +23,9 @@
   padding: 38px !important;
 }
 
-.welcome {
-  font-size: 28px;
-  font-weight: 500;
-  margin-bottom: 18px;
-}
-
 .title {
   font-size: 40px;
-  font-weight: 900;
+  font-weight: 900 !important;
   margin-top: 6px;
   margin-bottom: 6px;
 }

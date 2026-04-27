@@ -1,14 +1,12 @@
 import {
+  Autocomplete,
   Box,
   Container,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
+  TextField,
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { ErrorState } from "../../../shared/components/ErrorState";
 import { Loading } from "../../../shared/components/Loading";
@@ -21,29 +19,36 @@ import { AffectedTable4Cols } from "../components/AffectedTable4Cols";
 import { MapPlaceholder } from "../components/MapPlaceholder";
 import { SelectedSegmentMap } from "../components/SelectedSegmentMap";
 
+function normalizeText(value = "") {
+  return String(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .trim();
+}
+
 export function PredictCongestionPage() {
   const { selectedSegmentId, setSelectedSegmentId } = usePredictStore();
+  const [segmentSearchText, setSegmentSearchText] = useState("");
 
   const segmentsQuery = useQuery({
     queryKey: ["predict", "segments"],
     queryFn: api.fetchSegments,
   });
 
-  useEffect(() => {
-    if (!selectedSegmentId && segmentsQuery.data?.length) {
-      setSelectedSegmentId(segmentsQuery.data[0].id);
-    }
-  }, [selectedSegmentId, segmentsQuery.data, setSelectedSegmentId]);
+  const segments = useMemo(() => {
+    return segmentsQuery.data || [];
+  }, [segmentsQuery.data]);
 
   const selected = useMemo(() => {
-    const segs = segmentsQuery.data || [];
-    return segs.find((s) => s.id === selectedSegmentId) || null;
-  }, [segmentsQuery.data, selectedSegmentId]);
+    return segments.find((s) => s.id === selectedSegmentId) || null;
+  }, [segments, selectedSegmentId]);
 
   const affectedQuery = useQuery({
     enabled: Boolean(selectedSegmentId),
     queryKey: ["predict", "affected", selectedSegmentId],
-    queryFn: () => api.fetchAffectedList(selectedSegmentId),
+    queryFn: () => api.fetchAffectedSegments(selectedSegmentId),
   });
 
   const spreadQuery = useQuery({
@@ -52,29 +57,70 @@ export function PredictCongestionPage() {
     queryFn: () => api.fetchSpreadMapData(selectedSegmentId),
   });
 
+  function handleSearchInputChange(_, value) {
+    setSegmentSearchText(value);
+
+    const keyword = normalizeText(value);
+
+    if (!keyword) {
+      return;
+    }
+
+    const exactMatch = segments.find(
+      (s) => normalizeText(s.name) === keyword
+    );
+
+    const partialMatch = segments.find(
+      (s) => normalizeText(s.name).includes(keyword)
+    );
+
+    const matchedSegment = exactMatch || partialMatch;
+
+    if (matchedSegment && matchedSegment.id !== selectedSegmentId) {
+      setSelectedSegmentId(matchedSegment.id);
+    }
+  }
+
   return (
     <Box>
 
       <Container maxWidth="lg" className={styles.section}>
         {/* Select */}
         <Box className={styles.selectWrap}>
-          <FormControl size="small" fullWidth>
-            <InputLabel>Select the road segment you want to predict</InputLabel>
-            <Select
-              label="Select the road segment you want to predict"
-              value={selectedSegmentId}
-              onChange={(e) => setSelectedSegmentId(e.target.value)}
-            >
-              {(segmentsQuery.data || []).map((s) => (
-                <MenuItem key={s.id} value={s.id}>
-                  {s.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {segmentsQuery.isLoading ? <Loading label="Loading segments..." /> : null}
-          {segmentsQuery.error ? <ErrorState error={segmentsQuery.error} /> : null}
+          <Autocomplete
+            fullWidth
+            size="small"
+            options={segments}
+            value={selected}
+            inputValue={segmentSearchText}
+            loading={segmentsQuery.isLoading}
+            clearOnEscape
+            getOptionLabel={(option) => option?.name || ""}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            onInputChange={handleSearchInputChange}
+            onChange={(_, value) => {
+              if (value) {
+                setSelectedSegmentId(value.id);
+                setSegmentSearchText(value.name);
+              } else {
+                setSelectedSegmentId("");
+                setSegmentSearchText("");
+              }
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Enter the name of the road segment you want to predict."
+                placeholder="Ví dụ: Nguyễn Huệ, Điện Biên Phủ..."
+              />
+            )}
+          />
+          {segmentsQuery.isLoading ? (
+            <Loading label="Loading segments..." />
+          ) : null}
+          {segmentsQuery.error ? (
+            <ErrorState error={segmentsQuery.error} />
+          ) : null}
         </Box>
 
         {/* Map top */}

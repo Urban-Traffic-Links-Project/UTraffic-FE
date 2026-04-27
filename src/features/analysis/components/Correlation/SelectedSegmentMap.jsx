@@ -2,12 +2,12 @@ import { Box, Typography } from "@mui/material";
 import L from "leaflet";
 import { useEffect, useMemo } from "react";
 import {
-    MapContainer,
-    Marker,
-    Polyline,
-    Popup,
-    TileLayer,
-    useMap,
+  MapContainer,
+  Marker,
+  Polyline,
+  Popup,
+  TileLayer,
+  useMap,
 } from "react-leaflet";
 import styles from "../../pages/CorrelationAnalysisPage.module.css";
 
@@ -153,15 +153,6 @@ export function SelectedSegmentMap({ selected }) {
 
   return (
     <Box className={styles.mapBlock}>
-      <Box className={styles.mapMeta}>
-        <Typography className={styles.mapTitle}>
-          Selected road segment
-        </Typography>
-        <Typography className={styles.mapSubtitle}>
-          {selected?.name || "No segment selected"}
-        </Typography>
-      </Box>
-
       <Box className={styles.mapShell}>
         <MapContainer
           center={HCMC_CENTER}

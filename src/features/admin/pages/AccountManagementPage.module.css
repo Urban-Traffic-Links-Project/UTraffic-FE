@@ -1,0 +1,250 @@
+.page {
+  width: 100%;
+  padding: 32px 0 48px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 30px !important;
+  font-weight: 900 !important;
+  color: #263238;
+}
+
+.subtitle {
+  margin-top: 6px;
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.addButton {
+  white-space: nowrap;
+  background: #2e7d32 !important;
+  font-weight: 800 !important;
+  text-transform: none !important;
+  border-radius: 10px !important;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.statCard {
+  padding: 18px;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+}
+
+.statLabel {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 700;
+}
+
+.statValue {
+  margin-top: 8px;
+  font-size: 30px;
+  font-weight: 900;
+  color: #2e7d32;
+}
+
+.panel {
+  border-radius: 16px !important;
+  padding: 18px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.08) !important;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 260px;
+}
+
+.filterInput {
+  width: 180px;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tableWrap table {
+  min-width: 900px;
+}
+
+.emptyState {
+  padding: 28px 12px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.56);
+  font-weight: 700;
+}
+
+.mobileList {
+  display: none;
+}
+
+.mobileCard {
+  padding: 16px;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+}
+
+.mobileCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mobileName {
+  font-weight: 900;
+  color: #263238;
+  font-size: 16px;
+}
+
+.mobileMeta {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: 2px;
+}
+
+.mobileInfo {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.mobileActions {
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.formGrid {
+  display: grid;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.dialogActions {
+  padding: 12px 24px 20px !important;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+  }
+
+  .searchInput {
+    flex-basis: 100%;
+  }
+
+  .filterInput {
+    flex: 1;
+    min-width: 180px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .page {
+    padding: 24px 0 36px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .addButton {
+    width: 100%;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .searchInput,
+  .filterInput {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .tableWrap {
+    display: none;
+  }
+
+  .mobileList {
+    display: grid;
+    gap: 14px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .page {
+    padding: 20px 0 30px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statCard {
+    padding: 16px;
+  }
+
+  .statValue {
+    font-size: 26px;
+  }
+
+  .mobileCardHeader {
+    flex-direction: column;
+  }
+
+  .mobileActions {
+    display: grid !important;
+    grid-template-columns: 1fr;
+  }
+
+  .mobileActions button {
+    width: 100%;
+  }
+}

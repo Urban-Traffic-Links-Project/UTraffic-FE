@@ -1,13 +1,18 @@
 .layout {
+  width: 100%;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .mainNormal {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  flex: 1;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 .mainFull {
@@ -18,4 +23,29 @@
   min-height: 0;
   display: flex;
   overflow: hidden;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .mainNormal {
+    max-width: 100%;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .mainNormal {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .mainNormal {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 }

@@ -1,14 +1,12 @@
 import {
+  Autocomplete,
   Box,
   Container,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
+  TextField,
   Typography
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ErrorState } from "../../../shared/components/ErrorState";
 import { Loading } from "../../../shared/components/Loading";
@@ -31,13 +29,24 @@ function ImagePlaceholder({ label }) {
   );
 }
 
+function normalizeText(value = "") {
+  return String(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .trim();
+}
+
 export function CorrelationAnalysisPage() {
   const { selectedSegmentId, setSelectedSegmentId } = useCorrelationStore();
+  const [segmentSearchText, setSegmentSearchText] = useState("");
 
   const segmentsQuery = useQuery({
     queryKey: ["corr", "segments"],
     queryFn: api.fetchSegments,
   });
+  const segments = segmentsQuery.data || [];
 
   // set default selection
   useEffect(() => {
@@ -47,9 +56,8 @@ export function CorrelationAnalysisPage() {
   }, [selectedSegmentId, segmentsQuery.data, setSelectedSegmentId]);
 
   const selected = useMemo(() => {
-    const segs = segmentsQuery.data || [];
-    return segs.find((s) => s.id === selectedSegmentId) || null;
-  }, [segmentsQuery.data, selectedSegmentId]);
+    return segments.find((s) => s.id === selectedSegmentId) || null;
+  }, [segments, selectedSegmentId]);
 
   const affectedQuery = useQuery({
     enabled: Boolean(selectedSegmentId),
@@ -63,29 +71,62 @@ export function CorrelationAnalysisPage() {
     queryFn: () => api.fetchCorrelationMatrix(selectedSegmentId),
   });
 
+  function handleSearchInputChange(_, value) {
+    setSegmentSearchText(value);
+
+    const keyword = normalizeText(value);
+
+    if (!keyword) {
+      return;
+    }
+
+    const exactMatch = segments.find(
+      (s) => normalizeText(s.name) === keyword
+    );
+
+    const partialMatch = segments.find(
+      (s) => normalizeText(s.name).includes(keyword)
+    );
+
+    const matchedSegment = exactMatch || partialMatch;
+
+    if (matchedSegment && matchedSegment.id !== selectedSegmentId) {
+      setSelectedSegmentId(matchedSegment.id);
+    }
+  }
+
   return (
     <Box>
 
       {/* EXECUTION SECTION */}
       <Container maxWidth="lg" className={styles.section}>
-        <Typography className={styles.execTitle}>Analysis execution section</Typography>
 
         <Box className={styles.execWrap}>
           {/* Select / search */}
-          <FormControl size="small" fullWidth>
-            <InputLabel>Select the road segment you want to analyze</InputLabel>
-            <Select
-              label="Select the road segment you want to analyze"
-              value={selectedSegmentId}
-              onChange={(e) => setSelectedSegmentId(e.target.value)}
-            >
-              {(segmentsQuery.data || []).map((s) => (
-                <MenuItem key={s.id} value={s.id}>
-                  {s.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Autocomplete
+            fullWidth
+            size="small"
+            options={segments}
+            value={selected}
+            inputValue={segmentSearchText}
+            loading={segmentsQuery.isLoading}
+            getOptionLabel={(option) => option?.name || ""}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            onInputChange={handleSearchInputChange}
+            onChange={(_, value) => {
+              if (value) {
+                setSelectedSegmentId(value.id);
+                setSegmentSearchText(value.name);
+              }
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Enter the name of the road segment to be analyzed."
+                placeholder="Example: Nguyễn Huệ, Điện Biên Phủ..."
+              />
+            )}
+          />
 
           <Box sx={{ mt: 2 }}>
             {segmentsQuery.isLoading ? <Loading label="Loading segments..." /> : null}
