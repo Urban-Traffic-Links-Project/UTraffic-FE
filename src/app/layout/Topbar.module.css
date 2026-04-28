@@ -186,3 +186,62 @@
     height: 34px;
   }
 }
+
+.userButton {
+  padding: 4px !important;
+}
+
+.userAvatar {
+  width: 42px !important;
+  height: 42px !important;
+  background: #ffffff !important;
+  color: #2e7d32 !important;
+}
+
+.userMenuHeader {
+  min-width: 220px;
+  padding: 12px 16px;
+}
+
+.userName {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  color: #25323a;
+}
+
+.userEmail {
+  font-size: 13px !important;
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 2px !important;
+  word-break: break-all;
+}
+
+.drawerUserBox {
+  display: grid;
+  gap: 16px;
+}
+
+.drawerUserInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.drawerUserAvatar {
+  width: 44px !important;
+  height: 44px !important;
+  background: #2e7d32 !important;
+  color: #ffffff !important;
+}
+
+.drawerUserName {
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  color: #25323a;
+}
+
+.drawerUserEmail {
+  font-size: 13px !important;
+  color: rgba(0, 0, 0, 0.6);
+  word-break: break-all;
+}

@@ -10,19 +10,53 @@ import { RegisterPage } from "../../features/auth/pages/RegisterPage";
 import { HomePage } from "../../features/home/pages/HomePage";
 import { PredictCongestionPage } from "../../features/predict/pages/PredictCongestionPage";
 import { TrafficDataPage } from "../../features/trafficData/pages/TrafficDataPage";
+import { AdminRoute } from "./AdminRoute";
+import { ProtectedRoute } from "./ProtectedRoute";
 
 export function AppRouter() {
   return (
     <Routes>
       <Route element={<MainLayout />}>
         <Route path={PATHS.home} element={<HomePage />} />
-        <Route path={PATHS.trafficData} element={<TrafficDataPage />} />
-        <Route path={PATHS.analysis} element={<CorrelationAnalysisPage />} />
-        <Route path={PATHS.predict} element={<PredictCongestionPage />} />
+
+        <Route
+          path={PATHS.trafficData}
+          element={
+            <ProtectedRoute>
+              <TrafficDataPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path={PATHS.analysis}
+          element={
+            <ProtectedRoute>
+              <CorrelationAnalysisPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path={PATHS.predict}
+          element={
+            <ProtectedRoute>
+              <PredictCongestionPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path={PATHS.login} element={<LoginPage />} />
         <Route path={PATHS.signup} element={<RegisterPage />} />
       </Route>
-      <Route path={PATHS.admin} element={<AdminLayout />}>
+      <Route
+        path={PATHS.admin}
+        element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }
+      >
         <Route index element={<Navigate to={PATHS.admin + "/accounts"} replace />} />
         <Route path="accounts" element={<AccountManagementPage />} />
         <Route path="settings" element={<div>Trang cài đặt hệ thống</div>} />
