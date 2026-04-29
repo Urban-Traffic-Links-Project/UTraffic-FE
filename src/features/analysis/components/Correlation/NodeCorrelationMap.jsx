@@ -11,23 +11,23 @@ import { useCallback, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const HCMC = [10.7769, 106.7009];
+const HCMC = [10.78, 106.695];
 
 // Semantic zoom breakpoints
-const ZOOM_DOT   = 12;   // >= 12: hiện thêm node trung bình
-const ZOOM_ALL   = 14;   // >= 14: hiện toàn bộ node
+const ZOOM_DOT = 15;   // >= 12: hiện thêm node trung bình
+const ZOOM_ALL = 14;   // >= 14: hiện toàn bộ node
 const ZOOM_LABEL = 15;   // >= 15: hiện label corr value
 
 // Ego-Network filter defaults
-const EGO_DIST_M   = 1000;  // 1km
+const EGO_DIST_M = 1000;  // 1km
 const EGO_MIN_CORR = 0.5;
 
 // Colors
-const COLOR_NODE_DEFAULT  = "#7dd3fc";   // xanh nhạt — node bình thường
+const COLOR_NODE_DEFAULT = "#7dd3fc";   // xanh nhạt — node bình thường
 const COLOR_NODE_SELECTED = "#ff6f00";   // cam — node được click
 const COLOR_NODE_NEIGHBOR = "#e91e63";   // hồng đỏ — neighbor trong ego-net
-const COLOR_NODE_DIM      = "#b0bec5";   // xám — bị dim
-const COLOR_LINE          = "#ff6f00";   // đường nối ego-network
+const COLOR_NODE_DIM = "#b0bec5";   // xám — bị dim
+const COLOR_LINE = "#ff6f00";   // đường nối ego-network
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function corrToColor(corr) {
@@ -84,16 +84,16 @@ function shouldRenderNode(node, zoom) {
 
 function getFreeNodeRadius(node, zoom) {
   const importance = getNodeImportance(node);
-  if (zoom < ZOOM_DOT) return importance >= 5 ? 4.8 : 3.8;
-  if (zoom < ZOOM_ALL) return importance >= 4 ? 5.4 : 4.2;
-  return importance >= 4.8 ? 6.8 : importance >= 3.2 ? 5.8 : 4.9;
+  if (zoom < ZOOM_DOT) return importance >= 5 ? 5.8 : 3.6;
+  if (zoom < ZOOM_ALL) return importance >= 4 ? 5.8 : 4.8;
+  return importance >= 5 ? 7 : importance >= 3.2 ? 5.8 : 5.4;
 }
 
 function getFreeNodeStyle(node) {
   const importance = getNodeImportance(node);
-  if (importance >= 5.2) return { color: "#7c3aed", opacity: 0.98, weight: 2.4 };
-  if (importance >= 4.1) return { color: "#2563eb", opacity: 0.94, weight: 2.1 };
-  if (importance >= 3.0) return { color: "#f59e0b", opacity: 0.9, weight: 1.9 };
+  if (importance >= 5) return { color: "#ef4444", opacity: 0.98, weight: 2.4 };
+  if (importance >= 4.0) return { color: "#f59e0b", opacity: 0.94, weight: 2.1 };
+  if (importance >= 3.0) return { color: "#10b981", opacity: 0.9, weight: 1.9 };
   return { color: COLOR_NODE_DEFAULT, opacity: 0.82, weight: 1.6 };
 }
 
@@ -225,9 +225,9 @@ function MapController({
         newLayers.lines.push(line);
       });
 
-    // ---------- FREE MODE (xem tất cả nodes) ----------
+      // ---------- FREE MODE (xem tất cả nodes) ----------
     } else {
-        
+
       nodes.forEach((node) => {
         const latlng = getLatLng(node);
         if (!latlng || !shouldRenderNode(node, zoom)) return;
@@ -243,7 +243,7 @@ function MapController({
         // Popup khi hover (zoom cao mới hiện)
         if (zoom >= ZOOM_LABEL) {
           circle.bindTooltip(
-            `<b>OSM: ${node.osm_node_id}</b><br/>idx: ${node.node_index}<br/>degree: ${getNodeDegree(node)}<br/>betweenness: ${getNodeBetweenness(node).toFixed(3)}`,
+            `<b>OSM: ${node.osm_node_id}</b><br/>idx: ${node.node_index}<br/>degree: ${getNodeDegree(node)}`,
             { direction: "top", offset: [0, -8] }
           );
         }
@@ -327,7 +327,7 @@ export function NodeCorrelationMap({
 
       <MapContainer
         center={HCMC}
-        zoom={14}
+        zoom={16}
         scrollWheelZoom
         style={{ width: "100%", height, borderRadius: 12 }}
       >

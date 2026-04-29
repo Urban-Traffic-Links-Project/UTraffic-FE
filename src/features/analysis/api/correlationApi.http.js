@@ -37,9 +37,17 @@ export async function fetchEdges() {
 }
 
 /**
+ * Lấy danh sách tất cả snapshots — dùng để build slider ngày + giờ.
+ * Returns: { dates, slots, snapshots, total }
+ */
+export async function fetchSnapshots() {
+  return await httpGet("/api/v1/correlation/snapshots");
+}
+
+/**
  * Ego-Network: khi click node X.
- * params: { max_dist_m: 1000, min_corr: 0.5 } cho Ego-Network Focus
- * params: {} để lấy tất cả (dùng cho highlight toàn bộ)
+ * params: { max_dist_m, min_corr, snapshot_mode }
+ *   snapshot_mode = "2024-08-27_Slot_0900" (date + slot)
  */
 export async function fetchCorrelation(osmNodeId, params = {}) {
   const qs = new URLSearchParams(
@@ -55,13 +63,19 @@ export async function fetchCorrelation(osmNodeId, params = {}) {
     neighbors: data.neighbors.map((n) => ({
       id: String(n.osm_node_id),
       osm_node_id: n.osm_node_id,
+      node_index: n.node_index,
       lat: n.lat,
       lng: n.lon,
+      street_name: n.street_name ?? null,
       corr: n.corr,
       rank: n.rank,
       dist_m: n.dist_m,
       is_adjacent: n.is_adjacent,
     })),
     total: data.total,
+    snapshot_id: data.snapshot_id,
+    snapshot_mode: data.snapshot_mode,
+    snapshot_date: data.snapshot_date,
+    snapshot_slot: data.snapshot_slot,
   };
 }

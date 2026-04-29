@@ -50,6 +50,29 @@ export async function fetchEdges() {
   return MOCK_EDGES;
 }
 
+export async function fetchSnapshots() {
+  await sleep(100);
+  const dates = ["2024-08-26", "2024-08-27", "2024-08-28", "2024-08-29", "2024-08-30"];
+  const slots = ["Slot_0815", "Slot_0830", "Slot_0845", "Slot_0900", "Slot_0915",
+                 "Slot_0930", "Slot_0945", "Slot_1000", "Slot_1015", "Slot_1030",
+                 "Slot_1045", "Slot_1100", "Slot_1115", "Slot_1130", "Slot_1145"];
+  const snapshots = [];
+  dates.forEach((date) =>
+    slots.forEach((slot) =>
+      snapshots.push({
+        snapshot_id: `mock-${date}-${slot}`,
+        method: "dmfm_bridge_h1",
+        mode: `${date}_${slot}`,
+        date,
+        slot,
+        mean_corr: parseFloat((Math.random() * 0.1 + 0.05).toFixed(4)),
+        is_active: date === "2024-08-26" && slot === "Slot_1100",
+      })
+    )
+  );
+  return { snapshots, dates, slots, total: snapshots.length };
+}
+
 export async function fetchCorrelation(osmNodeId, params = {}) {
   await sleep(250);
   const r = seededRng(Number(osmNodeId) % 9999);
@@ -76,5 +99,8 @@ export async function fetchCorrelation(osmNodeId, params = {}) {
     selected: { osm_node_id: selected.osm_node_id, lat: selected.lat, lng: selected.lng },
     neighbors,
     total: neighbors.length,
+    snapshot_mode: params.snapshot_mode ?? "2024-08-26_Slot_1100",
+    snapshot_date: (params.snapshot_mode ?? "2024-08-26_Slot_1100").split("_")[0],
+    snapshot_slot: (params.snapshot_mode ?? "2024-08-26_Slot_1100").replace(/^\d{4}-\d{2}-\d{2}_/, ""),
   };
 }
