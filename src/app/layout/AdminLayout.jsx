@@ -9,7 +9,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { logoutFromServer } from "../api/authApi";
+import { clearAuthData, getCurrentUser } from "../api/authStorage";
 
 import logo from "../../assets/logo.png";
 import styles from "./AdminLayout.module.css";
@@ -27,7 +29,7 @@ const adminNavItems = [
   },
 ];
 
-function AdminSidebar({ onNavigate }) {
+function AdminSidebar({ onNavigate, onLogout }) {
   return (
     <Box className={styles.sidebarInner}>
       <NavLink to="/" className={styles.brand} onClick={onNavigate}>
@@ -60,7 +62,7 @@ function AdminSidebar({ onNavigate }) {
           Back to Analysis Interface
         </NavLink>
 
-        <button className={styles.logoutButton}>
+        <button className={styles.logoutButton} onClick={onLogout}>
           <LogoutRoundedIcon fontSize="small" />
           <span>Logout</span>
         </button>
@@ -70,17 +72,30 @@ function AdminSidebar({ onNavigate }) {
 }
 
 export function AdminLayout() {
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const currentUser = getCurrentUser();
 
   const closeMobileSidebar = () => {
     setMobileOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutFromServer();
+    } catch (error) {
+      console.error("ADMIN LOGOUT ERROR:", error);
+    } finally {
+      clearAuthData();
+      navigate("/login", { replace: true });
+    }
   };
 
   return (
     <Box className={styles.adminLayout}>
       {/* Desktop sidebar */}
       <aside className={styles.desktopSidebar}>
-        <AdminSidebar />
+        <AdminSidebar onLogout={handleLogout} />
       </aside>
 
       {/* Mobile drawer */}
@@ -92,7 +107,7 @@ export function AdminLayout() {
           className: styles.mobileDrawerPaper,
         }}
       >
-        <AdminSidebar onNavigate={closeMobileSidebar} />
+        <AdminSidebar onNavigate={closeMobileSidebar} onLogout={handleLogout} />
       </Drawer>
 
       <Box className={styles.mainArea}>
@@ -112,10 +127,13 @@ export function AdminLayout() {
           </Box>
 
           <Box className={styles.userBox}>
-            <Box className={styles.avatar}>A</Box>
+            <Box className={styles.avatar}>
+              {(currentUser?.full_name || currentUser?.email || "A").charAt(0).toUpperCase()}
+            </Box>
             <Box className={styles.userInfo}>
-              <Typography className={styles.userName}>Admin</Typography>
-              <Typography className={styles.userRole}>Administrator</Typography>
+              <Typography className={styles.userName}>
+                Welcome {currentUser?.full_name || "Admin"}
+              </Typography>
             </Box>
           </Box>
         </header>
