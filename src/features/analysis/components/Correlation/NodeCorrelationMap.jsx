@@ -2,7 +2,7 @@
  * NodeCorrelationMap.jsx
  *
  * Bản đồ Leaflet với 3 tính năng chính:
- *  1. Hiển thị 305 nodes thật lên bản đồ
+ *  1. Hiển thị nodes thật lên bản đồ
  *  2. Semantic Zooming — zoom thấp: dot nhỏ / zoom cao: dot lớn + label
  *  3. Ego-Network Focus — click node: dim toàn bộ, highlight node + neighbors + lines
  */
