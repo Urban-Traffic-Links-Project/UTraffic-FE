@@ -123,3 +123,42 @@
     padding: 24px 0;
   }
 }
+.forgotDialogTitle {
+  font-weight: 900 !important;
+  padding: 24px 24px 8px !important;
+}
+
+.forgotDialogContent {
+  display: grid;
+  gap: 14px;
+  padding: 12px 24px 8px !important;
+}
+
+.forgotDialogActions {
+  padding: 8px 24px 20px !important;
+}
+
+.forgotForm {
+  display: grid;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.forgotDescription {
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.secondaryBtn {
+  height: 48px;
+  border-radius: 8px !important;
+  border: 1px solid rgba(0, 0, 0, 0.22) !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  text-transform: none !important;
+}
+
+.secondaryBtn:disabled {
+  opacity: 0.55;
+}
