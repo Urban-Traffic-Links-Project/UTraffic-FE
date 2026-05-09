@@ -17,7 +17,7 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { correlationApi } from "../api/correlationApi.index";
 import { NodeCorrelationMap } from "../components/Correlation/NodeCorrelationMap";
@@ -70,8 +70,26 @@ const EGO_FILTER_PRESETS = [
 
 // ─── Snapshot Selector (date + slot sliders) ───────────────────────────────
 function SnapshotSelector({ dates, slots, selectedDate, selectedSlot, onChange, disabled }) {
-  const dateIdx  = dates.indexOf(selectedDate);
-  const slotIdx  = slots.indexOf(selectedSlot);
+  const dateIdx = dates.indexOf(selectedDate);
+  const slotIdx = slots.indexOf(selectedSlot);
+
+  // Local draft state — chỉ commit khi thả chuột (onChangeCommitted)
+  const [draftDateIdx, setDraftDateIdx] = useState(Math.max(0, dateIdx));
+  const [draftSlotIdx, setDraftSlotIdx] = useState(Math.max(0, slotIdx));
+
+  // Sync draft khi prop thay đổi từ bên ngoài (ví dụ auto-select active snapshot khi load)
+  useEffect(() => {
+    const idx = dates.indexOf(selectedDate);
+    if (idx >= 0) setDraftDateIdx(idx);
+  }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const idx = slots.indexOf(selectedSlot);
+    if (idx >= 0) setDraftSlotIdx(idx);
+  }, [selectedSlot]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const draftDate = dates[draftDateIdx] ?? selectedDate;
+  const draftSlot = slots[draftSlotIdx] ?? selectedSlot;
 
   return (
     <Paper
@@ -107,7 +125,7 @@ function SnapshotSelector({ dates, slots, selectedDate, selectedSlot, onChange, 
             NGÀY
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>
-            {selectedDate}
+            {draftDate}
           </Typography>
         </Box>
         <Slider
@@ -115,8 +133,9 @@ function SnapshotSelector({ dates, slots, selectedDate, selectedSlot, onChange, 
           min={0}
           max={Math.max(0, dates.length - 1)}
           step={1}
-          value={Math.max(0, dateIdx)}
-          onChange={(_, v) => onChange(dates[v], selectedSlot)}
+          value={draftDateIdx}
+          onChange={(_, v) => setDraftDateIdx(v)}
+          onChangeCommitted={(_, v) => onChange(dates[v], slots[draftSlotIdx] ?? selectedSlot)}
           marks={dates.map((d, i) => ({ value: i, label: dateToShort(d) }))}
           valueLabelDisplay="off"
           sx={{
@@ -134,7 +153,7 @@ function SnapshotSelector({ dates, slots, selectedDate, selectedSlot, onChange, 
             KHUNG GIỜ (15 phút)
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>
-            {slotToTime(selectedSlot)}
+            {slotToTime(draftSlot)}
           </Typography>
         </Box>
         <Slider
@@ -142,16 +161,17 @@ function SnapshotSelector({ dates, slots, selectedDate, selectedSlot, onChange, 
           min={0}
           max={Math.max(0, slots.length - 1)}
           step={1}
-          value={Math.max(0, slotIdx)}
-          onChange={(_, v) => onChange(selectedDate, slots[v])}
+          value={draftSlotIdx}
+          onChange={(_, v) => setDraftSlotIdx(v)}
+          onChangeCommitted={(_, v) => onChange(dates[draftDateIdx] ?? selectedDate, slots[v])}
           marks={slots
-            .filter((_, i) => i % 3 === 0) // hiện mỗi 3 slot để tránh dày
+            .filter((_, i) => i % 3 === 0)
             .map((s) => ({
               value: slots.indexOf(s),
               label: slotToTime(s),
             }))}
           valueLabelDisplay="auto"
-          valueLabelFormat={(v) => slotToTime(slots[v])}
+          valueLabelFormat={(v) => slotToTime(slots[v] ?? "")}
           sx={{
             "& .MuiSlider-markLabel": { fontSize: "0.65rem", color: "text.secondary" },
             "& .MuiSlider-mark": { height: 6 },
@@ -163,23 +183,152 @@ function SnapshotSelector({ dates, slots, selectedDate, selectedSlot, onChange, 
 }
 
 // ─── Ego Sidebar ──────────────────────────────────────────────────────────────
-function EgoSidebar({ selectedNode, egoData, onReset, filters, onFilterChange, nodeLookup }) {
-  if (!selectedNode || !egoData) return null;
-  const { neighbors } = egoData;
-  const top10 = [...neighbors].slice(0, 10);
-  const selectedDisplayName = getNodeDisplayName(selectedNode);
+function EgoSidebar({ selectedNode, egoData, onReset, filters, onFilterChange, nodeLookup, egoLoading }) {
   const [draftFilters, setDraftFilters] = useState(filters);
 
-  const strongestNeighbor = top10[0] ?? null;
-  const avgAbsCorr = neighbors.length
-    ? neighbors.reduce((sum, n) => sum + Math.abs(n.corr ?? 0), 0) / neighbors.length
-    : 0;
+  // Sync draftFilters khi filters từ props thay đổi (reset từ bên ngoài)
+  useEffect(() => { setDraftFilters(filters); }, [filters]);
 
   function commitFilters(nextFilters) {
     setDraftFilters(nextFilters);
     if (nextFilters.maxDist === filters.maxDist && nextFilters.minCorr === filters.minCorr) return;
     onFilterChange(nextFilters);
   }
+
+  // ── Phần bộ lọc — luôn hiển thị ──────────────────────────────────────────
+  const filterPanel = (
+    <Box>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
+        <FilterAltIcon sx={{ fontSize: 15, color: "text.secondary" }} />
+        <Typography variant="caption" color="text.secondary" fontWeight={700}>
+          BỘ LỌC EGO-NETWORK
+        </Typography>
+      </Box>
+
+      <Typography variant="caption" color="text.secondary">
+        Phạm vi: <b>{draftFilters.maxDist} m</b>
+      </Typography>
+      <Slider
+        size="small" min={200} max={3000} step={100}
+        value={draftFilters.maxDist}
+        onChange={(_, v) => setDraftFilters((prev) => ({ ...prev, maxDist: v }))}
+        onChangeCommitted={(_, v) => commitFilters({ ...draftFilters, maxDist: v })}
+        valueLabelDisplay="auto"
+        sx={{ mt: 0.5, mb: 1.5 }}
+      />
+
+      <Typography variant="caption" color="text.secondary">
+        |Corr| tối thiểu: <b>{draftFilters.minCorr.toFixed(1)}</b>
+      </Typography>
+      <Slider
+        size="small" min={0} max={1} step={0.1}
+        value={draftFilters.minCorr}
+        onChange={(_, v) => setDraftFilters((prev) => ({ ...prev, minCorr: v }))}
+        onChangeCommitted={(_, v) => commitFilters({ ...draftFilters, minCorr: v })}
+        valueLabelDisplay="auto"
+        sx={{ mt: 0.5 }}
+      />
+
+      <Stack direction="row" spacing={0.75} sx={{ mt: 1.25, flexWrap: "wrap", rowGap: 0.75 }}>
+        {EGO_FILTER_PRESETS.map((preset) => {
+          const active = draftFilters.maxDist === preset.maxDist && draftFilters.minCorr === preset.minCorr;
+          return (
+            <Chip
+              key={preset.label} size="small" label={preset.label}
+              color={active ? "primary" : "default"}
+              variant={active ? "filled" : "outlined"}
+              onClick={() => commitFilters({ maxDist: preset.maxDist, minCorr: preset.minCorr })}
+            />
+          );
+        })}
+        <Button size="small" variant="text"
+          onClick={() => commitFilters({ maxDist: 1000, minCorr: 0.5 })}
+          sx={{ minWidth: "auto", px: 1 }}
+        >Reset</Button>
+      </Stack>
+    </Box>
+  );
+
+  // ── Placeholder khi chưa chọn node ────────────────────────────────────────
+  if (!selectedNode) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 3,
+          p: 2.5,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        {filterPanel}
+        <Divider />
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1.5,
+            py: 3,
+            bgcolor: "rgba(25,118,210,0.02)",
+            borderRadius: 2,
+            border: "1px dashed",
+            borderColor: "divider",
+          }}
+        >
+          <MyLocationIcon sx={{ fontSize: 36, color: "text.disabled" }} />
+          <Typography variant="body2" color="text.secondary" fontWeight={600} textAlign="center">
+            Hãy chọn node bạn muốn xem
+          </Typography>
+          <Typography variant="caption" color="text.disabled" textAlign="center">
+            Click vào một nút giao trên bản đồ
+          </Typography>
+        </Box>
+      </Paper>
+    );
+  }
+
+  // ── Loading overlay khi đang re-fetch snapshot ─────────────────────────────
+  // (giữ egoData cũ, chỉ show spinner nhỏ ở header)
+  const selectedDisplayName = getNodeDisplayName(selectedNode);
+
+  if (!egoData) {
+    // Đang fetch lần đầu cho node này (chưa có data cũ)
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 3,
+          p: 2.5,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        {filterPanel}
+        <Divider />
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5, py: 3 }}>
+          <CircularProgress size={28} />
+          <Typography variant="body2" color="text.secondary" fontWeight={600}>
+            Đang tính tương quan...
+          </Typography>
+        </Box>
+      </Paper>
+    );
+  }
+
+  const { neighbors } = egoData;
+  const top10 = [...neighbors].slice(0, 10);
+
+  const strongestNeighbor = top10[0] ?? null;
+  const avgAbsCorr = neighbors.length
+    ? neighbors.reduce((sum, n) => sum + Math.abs(n.corr ?? 0), 0) / neighbors.length
+    : 0;
 
   return (
     <Paper
@@ -189,7 +338,6 @@ function EgoSidebar({ selectedNode, egoData, onReset, filters, onFilterChange, n
         borderColor: "divider",
         borderRadius: 3,
         p: 2.5,
-        height: "100%",
         display: "flex",
         flexDirection: "column",
         gap: 2,
@@ -199,6 +347,9 @@ function EgoSidebar({ selectedNode, egoData, onReset, filters, onFilterChange, n
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <MyLocationIcon sx={{ color: "#ff6f00", fontSize: 20 }} />
         <Box sx={{ flex: 1 }}>
+          {egoLoading && (
+            <CircularProgress size={12} sx={{ mr: 1, verticalAlign: "middle" }} />
+          )}
           <Typography variant="subtitle2" fontWeight={800}>
             {selectedDisplayName}
           </Typography>
@@ -235,57 +386,8 @@ function EgoSidebar({ selectedNode, egoData, onReset, filters, onFilterChange, n
 
       <Divider />
 
-      {/* Filter controls */}
-      <Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
-          <FilterAltIcon sx={{ fontSize: 15, color: "text.secondary" }} />
-          <Typography variant="caption" color="text.secondary" fontWeight={700}>
-            BỘ LỌC EGO-NETWORK
-          </Typography>
-        </Box>
-
-        <Typography variant="caption" color="text.secondary">
-          Phạm vi: <b>{draftFilters.maxDist} m</b>
-        </Typography>
-        <Slider
-          size="small" min={200} max={3000} step={100}
-          value={draftFilters.maxDist}
-          onChange={(_, v) => setDraftFilters((prev) => ({ ...prev, maxDist: v }))}
-          onChangeCommitted={(_, v) => commitFilters({ ...draftFilters, maxDist: v })}
-          valueLabelDisplay="auto"
-          sx={{ mt: 0.5, mb: 1.5 }}
-        />
-
-        <Typography variant="caption" color="text.secondary">
-          |Corr| tối thiểu: <b>{draftFilters.minCorr.toFixed(1)}</b>
-        </Typography>
-        <Slider
-          size="small" min={0} max={1} step={0.1}
-          value={draftFilters.minCorr}
-          onChange={(_, v) => setDraftFilters((prev) => ({ ...prev, minCorr: v }))}
-          onChangeCommitted={(_, v) => commitFilters({ ...draftFilters, minCorr: v })}
-          valueLabelDisplay="auto"
-          sx={{ mt: 0.5 }}
-        />
-
-        <Stack direction="row" spacing={0.75} sx={{ mt: 1.25, flexWrap: "wrap", rowGap: 0.75 }}>
-          {EGO_FILTER_PRESETS.map((preset) => {
-            const active = draftFilters.maxDist === preset.maxDist && draftFilters.minCorr === preset.minCorr;
-            return (
-              <Chip
-                key={preset.label} size="small" label={preset.label}
-                color={active ? "primary" : "default"}
-                variant={active ? "filled" : "outlined"}
-                onClick={() => commitFilters({ maxDist: preset.maxDist, minCorr: preset.minCorr })}
-              />
-            );
-          })}
-          <Button size="small" variant="text"
-            onClick={() => commitFilters({ maxDist: 1000, minCorr: 0.5 })}
-            sx={{ minWidth: "auto", px: 1 }}
-          >Reset</Button>
-        </Stack>
-      </Box>
+      {/* Filter controls — dùng lại filterPanel đã tạo ở trên */}
+      {filterPanel}
 
       <Divider />
 
@@ -448,8 +550,8 @@ export function CorrelationAnalysisPage() {
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const doFetchEgo = useCallback(async (node, snapshotMode, egoFilters) => {
+    // Không xóa egoData cũ ngay — giữ để sidebar không biến mất khi re-fetch snapshot
     setEgoLoading(true);
-    setEgoData(null);
     try {
       const data = await correlationApi.fetchCorrelation(node.osm_node_id, {
         max_dist_m:    egoFilters.maxDist,
@@ -460,6 +562,7 @@ export function CorrelationAnalysisPage() {
       setFocusMode(true);
     } catch (err) {
       console.error("fetchCorrelation error:", err);
+      // Không clear egoData khi lỗi — giữ dữ liệu cũ
     } finally {
       setEgoLoading(false);
     }
@@ -547,21 +650,18 @@ export function CorrelationAnalysisPage() {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", lg: showSidebar ? "minmax(0, 1fr) 320px" : "minmax(0, 1fr)" },
+          gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) 320px" },
           gap: 2.5,
-          transition: "grid-template-columns 0.3s ease",
           alignItems: "start",
         }}
       >
         {/* Left: bản đồ */}
         <Box>
           <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 3, overflow: "hidden", position: "relative" }}>
-            {(isLoading || egoLoading) && (
+            {isLoading && (
               <Box sx={{ position: "absolute", inset: 0, zIndex: 1000, bgcolor: "rgba(255,255,255,0.75)", display: "flex", alignItems: "center", justifyContent: "center", gap: 1.5 }}>
                 <CircularProgress size={28} />
-                <Typography variant="body2" fontWeight={600}>
-                  {isLoading ? "Đang tải dữ liệu..." : "Đang tính tương quan..."}
-                </Typography>
+                <Typography variant="body2" fontWeight={600}>Đang tải dữ liệu...</Typography>
               </Box>
             )}
 
@@ -584,19 +684,18 @@ export function CorrelationAnalysisPage() {
           </Box>
         </Box>
 
-        {/* Right: ego sidebar */}
-        <Slide direction="left" in={showSidebar} mountOnEnter unmountOnExit timeout={{ enter: 300, exit: 300 }}>
-          <Box sx={{ minWidth: 0, transformOrigin: "right center" }}>
-            <EgoSidebar
-              selectedNode={selectedNode}
-              egoData={egoData}
-              onReset={handleMapClick}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              nodeLookup={nodeLookup}
-            />
-          </Box>
-        </Slide>
+        {/* Right: ego sidebar — luôn hiển thị */}
+        <Box sx={{ minWidth: 0 }}>
+          <EgoSidebar
+            selectedNode={selectedNode}
+            egoData={egoData}
+            onReset={handleMapClick}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            nodeLookup={nodeLookup}
+            egoLoading={egoLoading}
+          />
+        </Box>
       </Box>
     </Box>
   );
