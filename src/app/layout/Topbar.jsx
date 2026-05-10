@@ -29,6 +29,7 @@ import styles from "./Topbar.module.css";
 const navItems = [
   { label: "Home", to: "/" },
   { label: "Traffic Data", to: "/traffic-data" },
+  { label: "Dashboard", to: "/dashboard" },
   { label: "Correlation Analysis", to: "/analysis" },
   { label: "Predict Congestion", to: "/predict" },
 ];

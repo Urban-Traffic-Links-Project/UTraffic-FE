@@ -5,25 +5,25 @@ import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
-    Box,
-    Button,
-    Chip,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    InputAdornment,
-    MenuItem,
-    Paper,
-    Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
-    TextField,
-    Typography,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  InputAdornment,
+  MenuItem,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
 } from "@mui/material";
 import { useMemo, useState } from "react";
 
@@ -175,7 +175,7 @@ export function AccountManagementPage() {
   }
 
   function handleDelete(accountId) {
-    const confirmDelete = window.confirm("Bạn có chắc muốn xóa tài khoản này?");
+    const confirmDelete = window.confirm("Are you sure you want to delete this account?");
     if (!confirmDelete) return;
 
     setAccounts((prev) => prev.filter((account) => account.id !== accountId));
@@ -198,9 +198,9 @@ export function AccountManagementPage() {
     <Box className={styles.page}>
       <Box className={styles.header}>
         <Box>
-          <Typography className={styles.title}>Quản lí tài khoản</Typography>
+          <Typography className={styles.title}>Account Management</Typography>
           <Typography className={styles.subtitle}>
-            Quản lí người dùng, phân quyền và trạng thái hoạt động của tài khoản.
+            Manage users, assign roles, and control account statuses.
           </Typography>
         </Box>
 
@@ -210,23 +210,23 @@ export function AccountManagementPage() {
           onClick={handleOpenCreate}
           className={styles.addButton}
         >
-          Thêm tài khoản
+          Add Account
         </Button>
       </Box>
 
       <Box className={styles.statsGrid}>
         <Paper className={styles.statCard}>
-          <Typography className={styles.statLabel}>Tổng tài khoản</Typography>
+          <Typography className={styles.statLabel}>Total Accounts</Typography>
           <Typography className={styles.statValue}>{totalAccounts}</Typography>
         </Paper>
 
         <Paper className={styles.statCard}>
-          <Typography className={styles.statLabel}>Đang hoạt động</Typography>
+          <Typography className={styles.statLabel}>Active</Typography>
           <Typography className={styles.statValue}>{activeAccounts}</Typography>
         </Paper>
 
         <Paper className={styles.statCard}>
-          <Typography className={styles.statLabel}>Đã khóa</Typography>
+          <Typography className={styles.statLabel}>Locked</Typography>
           <Typography className={styles.statValue}>{lockedAccounts}</Typography>
         </Paper>
 
@@ -241,7 +241,7 @@ export function AccountManagementPage() {
           <TextField
             size="small"
             className={styles.searchInput}
-            placeholder="Tìm theo họ tên, username, email..."
+            placeholder="Search by username, email..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             InputProps={{
@@ -256,12 +256,12 @@ export function AccountManagementPage() {
           <TextField
             select
             size="small"
-            label="Vai trò"
+            label="Role"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
             className={styles.filterInput}
           >
-            <MenuItem value="ALL">Tất cả</MenuItem>
+            <MenuItem value="ALL">All</MenuItem>
             {roles.map((role) => (
               <MenuItem key={role} value={role}>
                 {role}
@@ -272,12 +272,12 @@ export function AccountManagementPage() {
           <TextField
             select
             size="small"
-            label="Trạng thái"
+            label="Status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className={styles.filterInput}
           >
-            <MenuItem value="ALL">Tất cả</MenuItem>
+            <MenuItem value="ALL">All</MenuItem>
             {statusOptions.map((status) => (
               <MenuItem key={status.value} value={status.value}>
                 {status.label}
@@ -290,14 +290,14 @@ export function AccountManagementPage() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Mã</TableCell>
-                <TableCell>Họ tên</TableCell>
-                <TableCell>Tên đăng nhập</TableCell>
+                <TableCell>ID</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Username</TableCell>
                 <TableCell>Email</TableCell>
-                <TableCell>Vai trò</TableCell>
-                <TableCell>Trạng thái</TableCell>
-                <TableCell>Ngày tạo</TableCell>
-                <TableCell align="right">Thao tác</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Created At</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
 
@@ -346,7 +346,7 @@ export function AccountManagementPage() {
                 <TableRow>
                   <TableCell colSpan={8}>
                     <Box className={styles.emptyState}>
-                      Không tìm thấy tài khoản phù hợp.
+                      No matching accounts found.
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -375,8 +375,8 @@ export function AccountManagementPage() {
 
               <Box className={styles.mobileInfo}>
                 <Typography>Email: {account.email}</Typography>
-                <Typography>Vai trò: {account.role}</Typography>
-                <Typography>Ngày tạo: {account.createdAt}</Typography>
+                <Typography>Role: {account.role}</Typography>
+                <Typography>Created At: {account.createdAt}</Typography>
               </Box>
 
               <Stack direction="row" spacing={1} className={styles.mobileActions}>
@@ -386,7 +386,7 @@ export function AccountManagementPage() {
                   startIcon={<EditRoundedIcon />}
                   onClick={() => handleOpenEdit(account)}
                 >
-                  Sửa
+                  Edit
                 </Button>
 
                 <Button
@@ -401,7 +401,7 @@ export function AccountManagementPage() {
                   }
                   onClick={() => handleToggleStatus(account.id)}
                 >
-                  {account.status === "ACTIVE" ? "Khóa" : "Mở khóa"}
+                  {account.status === "ACTIVE" ? "Lock" : "Unlock"}
                 </Button>
 
                 <Button
@@ -411,7 +411,7 @@ export function AccountManagementPage() {
                   startIcon={<DeleteOutlineRoundedIcon />}
                   onClick={() => handleDelete(account.id)}
                 >
-                  Xóa
+                  Delete
                 </Button>
               </Stack>
             </Paper>
@@ -419,7 +419,7 @@ export function AccountManagementPage() {
 
           {!filteredAccounts.length ? (
             <Box className={styles.emptyState}>
-              Không tìm thấy tài khoản phù hợp.
+              No matching accounts found.
             </Box>
           ) : null}
         </Box>
@@ -432,14 +432,14 @@ export function AccountManagementPage() {
         maxWidth="sm"
       >
         <DialogTitle>
-          {editingAccount ? "Cập nhật tài khoản" : "Thêm tài khoản mới"}
+          {editingAccount ? "Update Account" : "Create New Account"}
         </DialogTitle>
 
         <DialogContent>
           <Box className={styles.formGrid}>
 
             <TextField
-              label="Tên đăng nhập"
+              label="Username"
               value={form.username}
               onChange={(e) => handleChange("username", e.target.value)}
               fullWidth
@@ -457,7 +457,7 @@ export function AccountManagementPage() {
 
             <TextField
               select
-              label="Vai trò"
+              label="Role"
               value={form.role}
               onChange={(e) => handleChange("role", e.target.value)}
               fullWidth
@@ -471,7 +471,7 @@ export function AccountManagementPage() {
 
             <TextField
               select
-              label="Trạng thái"
+              label="Status"
               value={form.status}
               onChange={(e) => handleChange("status", e.target.value)}
               fullWidth
@@ -486,9 +486,9 @@ export function AccountManagementPage() {
         </DialogContent>
 
         <DialogActions className={styles.dialogActions}>
-          <Button onClick={handleCloseDialog}>Hủy</Button>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button variant="contained" onClick={handleSave}>
-            Lưu
+            Save
           </Button>
         </DialogActions>
       </Dialog>
