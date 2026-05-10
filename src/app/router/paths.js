@@ -4,6 +4,7 @@ export const PATHS = {
   analysis: "/analysis",
   predict: "/predict",
   incidents: "/incidents",
+  dashboard: "/dashboard",
   login: "/login",
   signup: "/signup",
   admin: "/admin",

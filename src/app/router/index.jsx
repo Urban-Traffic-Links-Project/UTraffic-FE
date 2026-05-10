@@ -7,6 +7,7 @@ import { AccountManagementPage } from "../../features/admin/pages/AccountManagem
 import { CorrelationAnalysisPage } from "../../features/analysis/pages/CorrelationAnalysisPage";
 import { LoginPage } from "../../features/auth/pages/LoginPage";
 import { RegisterPage } from "../../features/auth/pages/RegisterPage";
+import { TrafficDashboardPage } from "../../features/dashboard/pages/TrafficDashboardPage";
 import { HomePage } from "../../features/home/pages/HomePage";
 import { IncidentsPage } from "../../features/incidents/pages/IncidentsPage";
 import { PredictCongestionPage } from "../../features/predict/pages/PredictCongestionPage";
@@ -25,6 +26,15 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <TrafficDataPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path={PATHS.dashboard}
+          element={
+            <ProtectedRoute>
+              <TrafficDashboardPage />
             </ProtectedRoute>
           }
         />

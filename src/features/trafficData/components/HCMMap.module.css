@@ -1,6 +1,7 @@
 .mapWrapper {
   width: 100%;
   height: 100%;
+  position: relative;
 }
 
 .leafletMap {
@@ -17,4 +18,31 @@
   background: #f5f7fa;
   color: #475467;
   font-size: 16px;
+}
+
+.clickHint,
+.trafficApiMissing {
+  position: absolute;
+  z-index: 700;
+  max-width: 380px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+  box-shadow: 0 10px 24px rgba(15, 34, 65, 0.14);
+}
+
+.clickHint {
+  right: 18px;
+  bottom: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #334155;
+}
+
+.trafficApiMissing {
+  right: 18px;
+  top: 18px;
+  background: rgba(254, 243, 199, 0.96);
+  color: #92400e;
 }
