@@ -111,7 +111,9 @@ function SnapshotSelector({ dates, slots, selectedDate, selectedSlot, onChange, 
         <Box sx={{ flex: 1 }} />
         <Chip
           size="small"
-          label={`${dateToShort(selectedDate)} · ${slotToTime(selectedSlot)}`}
+          label={selectedDate && selectedSlot 
+            ? `${dateToShort(selectedDate)} · ${slotToTime(selectedSlot)}` 
+            : "..."}
           color="primary"
           sx={{ fontWeight: 700, fontSize: "0.75rem" }}
         />
@@ -527,18 +529,25 @@ export function CorrelationAnalysisPage() {
     queryKey: ["corr-snapshots"],
     queryFn: () => correlationApi.fetchSnapshots(),
     staleTime: 5 * 60_000,
-    onSuccess: (data) => {
-      // Tự động chọn active snapshot khi load
-      const active = data.snapshots?.find((s) => s.is_active);
-      if (active) {
-        setSelectedDate(active.date);
-        setSelectedSlot(active.slot);
-      } else if (data.dates?.length > 0 && data.slots?.length > 0) {
-        setSelectedDate(data.dates[0]);
-        setSelectedSlot(data.slots[0]);
-      }
-    },
   });
+
+  // Thay thế onSuccess (v5) bằng useEffect để tự động chọn snapshot khi có data
+  useEffect(() => {
+    if (!snapshotsQuery.data) return;
+    const data = snapshotsQuery.data;
+    
+    // Chỉ set nếu chưa chọn gì
+    if (selectedDate && selectedSlot) return;
+
+    const active = data.snapshots?.find((s) => s.is_active);
+    if (active) {
+      setSelectedDate(active.date);
+      setSelectedSlot(active.slot);
+    } else if (data.dates?.length > 0 && data.slots?.length > 0) {
+      setSelectedDate(data.dates[0]);
+      setSelectedSlot(data.slots[0]);
+    }
+  }, [snapshotsQuery.data, selectedDate, selectedSlot]);
 
   const dates = snapshotsQuery.data?.dates ?? [];
   const slots = snapshotsQuery.data?.slots ?? [];

@@ -8,6 +8,7 @@ import { CorrelationAnalysisPage } from "../../features/analysis/pages/Correlati
 import { LoginPage } from "../../features/auth/pages/LoginPage";
 import { RegisterPage } from "../../features/auth/pages/RegisterPage";
 import { HomePage } from "../../features/home/pages/HomePage";
+import { IncidentsPage } from "../../features/incidents/pages/IncidentsPage";
 import { PredictCongestionPage } from "../../features/predict/pages/PredictCongestionPage";
 import { TrafficDataPage } from "../../features/trafficData/pages/TrafficDataPage";
 import { AdminRoute } from "./AdminRoute";
@@ -42,6 +43,15 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <PredictCongestionPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path={PATHS.incidents}
+          element={
+            <ProtectedRoute>
+              <IncidentsPage />
             </ProtectedRoute>
           }
         />

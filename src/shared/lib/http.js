@@ -11,3 +11,22 @@ export async function httpGet(path, { baseUrl, signal } = {}) {
   }
   return res.json();
 }
+
+export async function httpPost(path, body, { baseUrl, signal } = {}) {
+  const url = new URL(path, baseUrl || import.meta.env.VITE_API_BASE_URL || "");
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : "{}",
+    signal,
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}: ${text || res.statusText}`);
+  }
+  return res.json();
+}

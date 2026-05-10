@@ -37,6 +37,7 @@ export function Sidebar({ width = 260 }) {
 
       <List sx={{ display: "grid", gap: 1 }}>
         <Item to={PATHS.analysis} label="Analysis" />
+        <Item to={PATHS.incidents} label="Incidents" />
       </List>
     </Box>
   );
