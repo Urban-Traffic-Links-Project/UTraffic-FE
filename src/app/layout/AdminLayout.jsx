@@ -1,7 +1,6 @@
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
   Box,
   Drawer,
@@ -22,11 +21,6 @@ const adminNavItems = [
     to: "/admin/accounts",
     icon: <ManageAccountsRoundedIcon fontSize="small" />,
   },
-  {
-    label: "System settings",
-    to: "/admin/settings",
-    icon: <SettingsRoundedIcon fontSize="small" />,
-  },
 ];
 
 function AdminSidebar({ onNavigate, onLogout }) {
@@ -35,7 +29,7 @@ function AdminSidebar({ onNavigate, onLogout }) {
       <NavLink to="/" className={styles.brand} onClick={onNavigate}>
         <img src={logo} alt="Logo" className={styles.logo} />
         <Box>
-          <Typography className={styles.brandName}>HCMTraffic</Typography>
+          <Typography className={styles.brandName}>UTraffic</Typography>
           <Typography className={styles.brandSub}>Admin Panel</Typography>
         </Box>
       </NavLink>
