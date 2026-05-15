@@ -539,11 +539,8 @@ export function CorrelationAnalysisPage() {
     // Chỉ set nếu chưa chọn gì
     if (selectedDate && selectedSlot) return;
 
-    const active = data.snapshots?.find((s) => s.is_active);
-    if (active) {
-      setSelectedDate(active.date);
-      setSelectedSlot(active.slot);
-    } else if (data.dates?.length > 0 && data.slots?.length > 0) {
+    // Luôn ưu tiên chọn ngày nhỏ nhất và khung giờ nhỏ nhất
+    if (data.dates?.length > 0 && data.slots?.length > 0) {
       setSelectedDate(data.dates[0]);
       setSelectedSlot(data.slots[0]);
     }

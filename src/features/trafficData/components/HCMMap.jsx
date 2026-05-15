@@ -6,12 +6,11 @@ const TOMTOM_API_KEY = import.meta.env.VITE_TOMTOM_API_KEY;
 const TOMTOM_FLOW_TILE_STYLE = "relative0";
 const TOMTOM_FLOW_TILE_OPACITY = 0.88;
 
-const DISTRICT_1_BOUNDS = [
-  [10.753522, 106.672782],
-  [10.793739, 106.71012],
+const HCMC_CENTER = [10.7769, 106.7009];
+const HCMC_BOUNDS = [
+  [10.3, 106.3], // South-West
+  [11.2, 107.1], // North-East
 ];
-
-const DISTRICT_1_CENTER = [10.7769, 106.7009];
 
 function ResizeMap({ resizeKey }) {
   const map = useMap();
@@ -72,12 +71,10 @@ export default function HCMMap({
   return (
     <div className={styles.mapWrapper}>
       <MapContainer
-        bounds={DISTRICT_1_BOUNDS}
-        center={DISTRICT_1_CENTER}
-        zoom={14}
-        minZoom={12}
-        maxBounds={DISTRICT_1_BOUNDS}
-        maxBoundsViscosity={0.85}
+        center={HCMC_CENTER}
+        zoom={13}
+        minZoom={10}
+        maxZoom={18}
         scrollWheelZoom={true}
         className={styles.leafletMap}
       >
