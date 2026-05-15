@@ -18,11 +18,11 @@ export function Footer() {
             <Box className={styles.brand}>
               <img src={logo} alt="Logo" className={styles.logo} />
 
-              <Typography className={styles.brandText}>HCMTraffic</Typography>
+              <Typography className={styles.brandText}>UTraffic</Typography>
             </Box>
 
             <Typography className={styles.muted}>
-              Copyright © 2020 HCMTraffic ltd.
+              Copyright © 2020 UTraffic ltd.
             </Typography>
             <Typography className={styles.muted}>All rights reserved</Typography>
 

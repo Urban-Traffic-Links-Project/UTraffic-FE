@@ -77,7 +77,7 @@ export function HomePage() {
         <div className={styles.container}>
           <div className={styles.sectionHeading}>
             <h2>Main functions of the system</h2>
-            <p>What is HCMTraffic used for?</p>
+            <p>What is UTraffic used for?</p>
           </div>
 
           <div className={styles.functionsGrid}>

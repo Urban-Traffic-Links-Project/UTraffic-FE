@@ -136,7 +136,7 @@ export function Topbar() {
           {/* Logo */}
           <NavLink to="/" className={styles.brand}>
             <img src={logo} alt="Logo" className={styles.logo} />
-            <div className={styles.brandText}>HCMTraffic</div>
+            <div className={styles.brandText}>UTraffic</div>
           </NavLink>
 
           {/* Desktop nav */}
@@ -235,7 +235,7 @@ export function Topbar() {
                       <ListItemIcon>
                         <AdminPanelSettingsRoundedIcon fontSize="small" />
                       </ListItemIcon>
-                      Về trang quản lí
+                      Return to admin panel
                     </MenuItem>
                   )}
 
@@ -273,7 +273,7 @@ export function Topbar() {
         <Box className={styles.drawerHeader}>
           <Box className={styles.drawerBrand}>
             <img src={logo} alt="Logo" className={styles.drawerLogo} />
-            <div className={styles.drawerBrandText}>HCMTraffic</div>
+            <div className={styles.drawerBrandText}>UTraffic</div>
           </Box>
 
           <IconButton onClick={closeMenu} aria-label="Close menu">
@@ -370,7 +370,7 @@ export function Topbar() {
                     borderRadius: 2,
                   }}
                 >
-                  Về trang quản lí
+                  Return to admin panel
                 </Button>
               )}
 

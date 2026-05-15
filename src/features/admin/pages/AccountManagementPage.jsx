@@ -1,13 +1,17 @@
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import VpnKeyRoundedIcon from "@mui/icons-material/VpnKeyRounded";
 import {
+  Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -21,117 +25,257 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  TablePagination,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import styles from "./AccountManagementPage.module.css";
 
-const roles = ["Admin", "Manager", "Staff", "Viewer"];
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
+const roleOptions = [
+  { value: "admin", label: "Admin" },
+  { value: "user", label: "User" },
+];
 
 const statusOptions = [
   { value: "ACTIVE", label: "Active" },
   { value: "LOCKED", label: "Locked" },
 ];
 
-const initialAccounts = [
-  {
-    id: "U001",
-    username: "annv",
-    email: "annv@example.com",
-    role: "Admin",
-    status: "ACTIVE",
-    createdAt: "2026-04-01",
-  },
-  {
-    id: "U002",
-    username: "binhtt",
-    email: "binhtt@example.com",
-    role: "Manager",
-    status: "ACTIVE",
-    createdAt: "2026-04-05",
-  },
-  {
-    id: "U003",
-    username: "cuonglm",
-    email: "cuonglm@example.com",
-    role: "Staff",
-    status: "LOCKED",
-    createdAt: "2026-04-12",
-  },
-];
-
 const emptyForm = {
-  username: "",
+  full_name: "",
   email: "",
-  role: "Staff",
+  password: "",
+  role: "user",
   status: "ACTIVE",
 };
 
-function getStatusLabel(status) {
-  return status === "ACTIVE" ? "Active" : "Locked";
+const emptyResetPasswordForm = {
+  new_password: "",
+  confirm_password: "",
+};
+
+function getStatusLabel(isActive) {
+  return isActive ? "Active" : "Locked";
 }
 
-function getStatusColor(status) {
-  return status === "ACTIVE" ? "success" : "error";
+function getStatusColor(isActive) {
+  return isActive ? "success" : "error";
 }
 
-function normalizeText(value = "") {
-  return String(value).toLowerCase().trim();
+function getRoleLabel(role) {
+  return roleOptions.find((option) => option.value === role)?.label || role || "--";
+}
+
+function normalizeDate(value) {
+  if (!value) return "--";
+
+  try {
+    return new Date(value).toLocaleString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return value;
+  }
+}
+
+function getRowNumber(index, page, rowsPerPage) {
+  return page * rowsPerPage + index + 1;
+}
+
+function findTokenDeep(value, depth = 0) {
+  if (!value || depth > 5) return "";
+
+  if (typeof value === "string") {
+    if (value.startsWith("eyJ")) return value;
+    return "";
+  }
+
+  if (typeof value !== "object") return "";
+
+  const directKeys = [
+    "access_token",
+    "accessToken",
+    "token",
+    "authToken",
+    "jwt",
+  ];
+
+  for (const key of directKeys) {
+    if (typeof value[key] === "string" && value[key]) {
+      return value[key];
+    }
+  }
+
+  for (const child of Object.values(value)) {
+    const found = findTokenDeep(child, depth + 1);
+    if (found) return found;
+  }
+
+  return "";
+}
+
+function getAccessToken() {
+  const storages = [window.localStorage, window.sessionStorage];
+
+  for (const storage of storages) {
+    for (const key of Object.keys(storage)) {
+      const raw = storage.getItem(key);
+
+      if (!raw) continue;
+      if (raw.startsWith("eyJ")) return raw;
+
+      try {
+        const parsed = JSON.parse(raw);
+        const found = findTokenDeep(parsed);
+        if (found) return found;
+      } catch {
+        // Ignore non-JSON storage values.
+      }
+    }
+  }
+
+  return "";
+}
+
+async function adminApiRequest(path, options = {}) {
+  const token = getAccessToken();
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      Accept: "application/json",
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    },
+  });
+
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    const detail = Array.isArray(data?.detail)
+      ? data.detail.map((item) => item.msg).join(", ")
+      : data?.detail;
+
+    throw new Error(detail || data?.message || `Request failed (${response.status})`);
+  }
+
+  return data;
 }
 
 export function AccountManagementPage() {
-  const [accounts, setAccounts] = useState(initialAccounts);
+  const [accounts, setAccounts] = useState([]);
+  const [totalAccountsFromApi, setTotalAccountsFromApi] = useState(0);
 
   const [keyword, setKeyword] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+
   const [openDialog, setOpenDialog] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [form, setForm] = useState(emptyForm);
 
-  const filteredAccounts = useMemo(() => {
-    const search = normalizeText(keyword);
+  const [resetPasswordAccount, setResetPasswordAccount] = useState(null);
+  const [resetPasswordForm, setResetPasswordForm] = useState(emptyResetPasswordForm);
 
-    return accounts.filter((account) => {
-      const matchKeyword =
-        normalizeText(account.username).includes(search) ||
-        normalizeText(account.email).includes(search);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
-      const matchRole = roleFilter === "ALL" || account.role === roleFilter;
-      const matchStatus =
-        statusFilter === "ALL" || account.status === statusFilter;
+  const fetchAccounts = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMsg("");
 
-      return matchKeyword && matchRole && matchStatus;
-    });
-  }, [accounts, keyword, roleFilter, statusFilter]);
+    try {
+      const params = new URLSearchParams({
+        skip: String(page * rowsPerPage),
+        limit: String(rowsPerPage),
+      });
 
-  const totalAccounts = accounts.length;
-  const activeAccounts = accounts.filter((x) => x.status === "ACTIVE").length;
-  const lockedAccounts = accounts.filter((x) => x.status === "LOCKED").length;
-  const adminAccounts = accounts.filter((x) => x.role === "Admin").length;
+      if (keyword.trim()) params.set("search", keyword.trim());
+      if (roleFilter !== "ALL") params.set("role", roleFilter);
+      if (statusFilter !== "ALL") {
+        params.set("is_active", statusFilter === "ACTIVE" ? "true" : "false");
+      }
+
+      const data = await adminApiRequest(`/api/v1/auth/admin/users?${params.toString()}`);
+      const items = Array.isArray(data) ? data : data?.items || [];
+
+      setAccounts(items);
+      setTotalAccountsFromApi(Array.isArray(data) ? items.length : data?.total || 0);
+    } catch (error) {
+      console.error("LOAD ADMIN USERS ERROR:", error);
+      setErrorMsg(error?.message || "Không tải được danh sách tài khoản.");
+      setAccounts([]);
+      setTotalAccountsFromApi(0);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [keyword, page, roleFilter, rowsPerPage, statusFilter]);
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [keyword, roleFilter, statusFilter]);
+
+  const totalAccounts = totalAccountsFromApi || accounts.length;
+  const activeAccounts = accounts.filter((account) => account.is_active).length;
+  const lockedAccounts = accounts.filter((account) => !account.is_active).length;
+  const adminAccounts = accounts.filter((account) => account.role === "admin").length;
+
+  const dialogTitle = editingAccount ? "Update Account" : "Create New Account";
+
+  function clearMessages() {
+    setMessage("");
+    setErrorMsg("");
+  }
 
   function handleOpenCreate() {
+    clearMessages();
     setEditingAccount(null);
     setForm(emptyForm);
     setOpenDialog(true);
   }
 
   function handleOpenEdit(account) {
+    clearMessages();
     setEditingAccount(account);
     setForm({
-      username: account.username,
-      email: account.email,
-      role: account.role,
-      status: account.status,
+      full_name: account.full_name || "",
+      email: account.email || "",
+      password: "",
+      role: account.role || "user",
+      status: account.is_active ? "ACTIVE" : "LOCKED",
     });
     setOpenDialog(true);
   }
 
   function handleCloseDialog() {
+    if (isSaving) return;
+
     setOpenDialog(false);
     setEditingAccount(null);
     setForm(emptyForm);
@@ -144,54 +288,147 @@ export function AccountManagementPage() {
     }));
   }
 
-  function handleSave() {
-    if (!form.username.trim() || !form.email.trim()) {
-      alert("Please fill in all required fields.");
+  async function handleSave() {
+    clearMessages();
+
+    if (!form.email.trim()) {
+      setErrorMsg("Vui lòng nhập email.");
       return;
     }
 
-    if (editingAccount) {
-      setAccounts((prev) =>
-        prev.map((account) =>
-          account.id === editingAccount.id
-            ? {
-                ...account,
-                ...form,
-              }
-            : account
-        )
-      );
-    } else {
-      const newAccount = {
-        id: `U${Date.now()}`,
-        ...form,
-        createdAt: new Date().toISOString().slice(0, 10),
-      };
-
-      setAccounts((prev) => [newAccount, ...prev]);
+    if (!editingAccount && form.password.length < 8) {
+      setErrorMsg("Mật khẩu tạo mới phải có ít nhất 8 ký tự.");
+      return;
     }
 
-    handleCloseDialog();
+    try {
+      setIsSaving(true);
+
+      if (editingAccount) {
+        await adminApiRequest(`/api/v1/auth/admin/users/${editingAccount.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            full_name: form.full_name.trim() || null,
+            role: form.role,
+            is_active: form.status === "ACTIVE",
+          }),
+        });
+
+        setMessage("Cập nhật tài khoản thành công.");
+      } else {
+        await adminApiRequest("/api/v1/auth/admin/users", {
+          method: "POST",
+          body: JSON.stringify({
+            email: form.email.trim(),
+            password: form.password,
+            full_name: form.full_name.trim() || null,
+            role: form.role,
+            is_active: form.status === "ACTIVE",
+          }),
+        });
+
+        setMessage("Tạo tài khoản thành công.");
+      }
+
+      handleCloseDialog();
+      await fetchAccounts();
+    } catch (error) {
+      console.error("SAVE ADMIN USER ERROR:", error);
+      setErrorMsg(error?.message || "Không lưu được tài khoản.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
-  function handleDelete(accountId) {
-    const confirmDelete = window.confirm("Are you sure you want to delete this account?");
-    if (!confirmDelete) return;
+  async function handleToggleStatus(account) {
+    clearMessages();
 
-    setAccounts((prev) => prev.filter((account) => account.id !== accountId));
+    const actionText = account.is_active ? "khóa" : "mở khóa";
+    const confirmed = window.confirm(`Bạn có chắc muốn ${actionText} tài khoản ${account.email}?`);
+
+    if (!confirmed) return;
+
+    try {
+      await adminApiRequest(`/api/v1/auth/admin/users/${account.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          is_active: !account.is_active,
+        }),
+      });
+
+      setMessage(`${account.is_active ? "Khóa" : "Mở khóa"} tài khoản thành công.`);
+      await fetchAccounts();
+    } catch (error) {
+      console.error("TOGGLE ADMIN USER ERROR:", error);
+      setErrorMsg(error?.message || "Không cập nhật được trạng thái tài khoản.");
+    }
   }
 
-  function handleToggleStatus(accountId) {
-    setAccounts((prev) =>
-      prev.map((account) =>
-        account.id === accountId
-          ? {
-              ...account,
-              status: account.status === "ACTIVE" ? "LOCKED" : "ACTIVE",
-            }
-          : account
-      )
+  function handleOpenResetPassword(account) {
+    clearMessages();
+    setResetPasswordAccount(account);
+    setResetPasswordForm(emptyResetPasswordForm);
+  }
+
+  function handleCloseResetPassword() {
+    if (isSaving) return;
+
+    setResetPasswordAccount(null);
+    setResetPasswordForm(emptyResetPasswordForm);
+  }
+
+  async function handleResetPassword() {
+    clearMessages();
+
+    if (resetPasswordForm.new_password.length < 8) {
+      setErrorMsg("Mật khẩu mới phải có ít nhất 8 ký tự.");
+      return;
+    }
+
+    if (resetPasswordForm.new_password !== resetPasswordForm.confirm_password) {
+      setErrorMsg("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      await adminApiRequest(`/api/v1/auth/admin/users/${resetPasswordAccount.id}/reset-password`, {
+        method: "POST",
+        body: JSON.stringify({
+          new_password: resetPasswordForm.new_password,
+        }),
+      });
+
+      setMessage("Đặt lại mật khẩu thành công.");
+      handleCloseResetPassword();
+    } catch (error) {
+      console.error("RESET ADMIN USER PASSWORD ERROR:", error);
+      setErrorMsg(error?.message || "Không đặt lại được mật khẩu.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleRevokeSessions(account) {
+    clearMessages();
+
+    const confirmed = window.confirm(
+      `Đăng xuất tài khoản ${account.email} khỏi tất cả thiết bị?`
     );
+
+    if (!confirmed) return;
+
+    try {
+      await adminApiRequest(`/api/v1/auth/admin/users/${account.id}/revoke-sessions`, {
+        method: "POST",
+      });
+
+      setMessage("Đã revoke toàn bộ phiên đăng nhập của tài khoản.");
+    } catch (error) {
+      console.error("REVOKE ADMIN USER SESSIONS ERROR:", error);
+      setErrorMsg(error?.message || "Không revoke được phiên đăng nhập.");
+    }
   }
 
   return (
@@ -200,19 +437,43 @@ export function AccountManagementPage() {
         <Box>
           <Typography className={styles.title}>Account Management</Typography>
           <Typography className={styles.subtitle}>
-            Manage users, assign roles, and control account statuses.
+            Manage users, assign roles, lock accounts, reset passwords, and revoke sessions.
           </Typography>
         </Box>
 
-        <Button
-          variant="contained"
-          startIcon={<AddRoundedIcon />}
-          onClick={handleOpenCreate}
-          className={styles.addButton}
-        >
-          Add Account
-        </Button>
+        <Stack direction="row" spacing={1.5} className={styles.headerActions}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshRoundedIcon />}
+            onClick={fetchAccounts}
+            disabled={isLoading}
+            className={styles.refreshButton}
+          >
+            Refresh
+          </Button>
+
+          <Button
+            variant="contained"
+            startIcon={<AddRoundedIcon />}
+            onClick={handleOpenCreate}
+            className={styles.addButton}
+          >
+            Add Account
+          </Button>
+        </Stack>
       </Box>
+
+      {message && (
+        <Alert severity="success" className={styles.alertBox} onClose={() => setMessage("")}>
+          {message}
+        </Alert>
+      )}
+
+      {errorMsg && (
+        <Alert severity="error" className={styles.alertBox} onClose={() => setErrorMsg("")}>
+          {errorMsg}
+        </Alert>
+      )}
 
       <Box className={styles.statsGrid}>
         <Paper className={styles.statCard}>
@@ -221,17 +482,17 @@ export function AccountManagementPage() {
         </Paper>
 
         <Paper className={styles.statCard}>
-          <Typography className={styles.statLabel}>Active</Typography>
+          <Typography className={styles.statLabel}>Active on page</Typography>
           <Typography className={styles.statValue}>{activeAccounts}</Typography>
         </Paper>
 
         <Paper className={styles.statCard}>
-          <Typography className={styles.statLabel}>Locked</Typography>
+          <Typography className={styles.statLabel}>Locked on page</Typography>
           <Typography className={styles.statValue}>{lockedAccounts}</Typography>
         </Paper>
 
         <Paper className={styles.statCard}>
-          <Typography className={styles.statLabel}>Admin</Typography>
+          <Typography className={styles.statLabel}>Admin on page</Typography>
           <Typography className={styles.statValue}>{adminAccounts}</Typography>
         </Paper>
       </Box>
@@ -241,7 +502,7 @@ export function AccountManagementPage() {
           <TextField
             size="small"
             className={styles.searchInput}
-            placeholder="Search by username, email..."
+            placeholder="Search by name, email..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             InputProps={{
@@ -262,9 +523,9 @@ export function AccountManagementPage() {
             className={styles.filterInput}
           >
             <MenuItem value="ALL">All</MenuItem>
-            {roles.map((role) => (
-              <MenuItem key={role} value={role}>
-                {role}
+            {roleOptions.map((role) => (
+              <MenuItem key={role.value} value={role.value}>
+                {role.label}
               </MenuItem>
             ))}
           </TextField>
@@ -290,59 +551,81 @@ export function AccountManagementPage() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
+                <TableCell>No.</TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell>Username</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Role</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Created At</TableCell>
+                <TableCell>Last Login</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
 
             <TableBody>
-              {filteredAccounts.map((account) => (
-                <TableRow key={account.id} hover>
-                  <TableCell>{account.id}</TableCell>
-                  <TableCell>{account.username}</TableCell>
-                  <TableCell>{account.email}</TableCell>
-                  <TableCell>
-                    <Chip label={account.role} size="small" />
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={getStatusLabel(account.status)}
-                      color={getStatusColor(account.status)}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </TableCell>
-                  <TableCell>{account.createdAt}</TableCell>
-                  <TableCell align="right">
-                    <IconButton onClick={() => handleOpenEdit(account)}>
-                      <EditRoundedIcon fontSize="small" />
-                    </IconButton>
-
-                    <IconButton onClick={() => handleToggleStatus(account.id)}>
-                      {account.status === "ACTIVE" ? (
-                        <LockRoundedIcon fontSize="small" />
-                      ) : (
-                        <LockOpenRoundedIcon fontSize="small" />
-                      )}
-                    </IconButton>
-
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(account.id)}
-                    >
-                      <DeleteOutlineRoundedIcon fontSize="small" />
-                    </IconButton>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <Box className={styles.loadingState}>
+                      <CircularProgress size={24} />
+                      <span>Loading accounts...</span>
+                    </Box>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : null}
 
-              {!filteredAccounts.length ? (
+              {!isLoading &&
+                accounts.map((account, index) => (
+                  <TableRow key={account.id} hover>
+                    <TableCell>{getRowNumber(index, page, rowsPerPage)}</TableCell>
+                    <TableCell>{account.full_name || "--"}</TableCell>
+                    <TableCell>{account.email}</TableCell>
+                    <TableCell>
+                      <Chip label={getRoleLabel(account.role)} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={getStatusLabel(account.is_active)}
+                        color={getStatusColor(account.is_active)}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>{normalizeDate(account.created_at)}</TableCell>
+                    <TableCell>{normalizeDate(account.last_login_at)}</TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Edit account">
+                        <IconButton onClick={() => handleOpenEdit(account)}>
+                          <EditRoundedIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title={account.is_active ? "Lock account" : "Unlock account"}>
+                        <IconButton onClick={() => handleToggleStatus(account)}>
+                          {account.is_active ? (
+                            <LockRoundedIcon fontSize="small" />
+                          ) : (
+                            <LockOpenRoundedIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Reset password">
+                        <IconButton onClick={() => handleOpenResetPassword(account)}>
+                          <VpnKeyRoundedIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Revoke sessions">
+                        <IconButton onClick={() => handleRevokeSessions(account)}>
+                          <LogoutRoundedIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+              {!isLoading && !accounts.length ? (
                 <TableRow>
                   <TableCell colSpan={8}>
                     <Box className={styles.emptyState}>
@@ -355,28 +638,45 @@ export function AccountManagementPage() {
           </Table>
         </Box>
 
+        <TablePagination
+          component="div"
+          count={totalAccountsFromApi}
+          page={page}
+          onPageChange={(_, nextPage) => setPage(nextPage)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(event) => {
+            setRowsPerPage(Number(event.target.value));
+            setPage(0);
+          }}
+          rowsPerPageOptions={[10, 20, 50]}
+        />
+
         <Box className={styles.mobileList}>
-          {filteredAccounts.map((account) => (
+          {accounts.map((account, index) => (
             <Paper key={account.id} className={styles.mobileCard}>
               <Box className={styles.mobileCardHeader}>
                 <Box>
+                  <Typography className={styles.mobileName}>
+                    {account.full_name || account.email}
+                  </Typography>
                   <Typography className={styles.mobileMeta}>
-                    @{account.username}
+                    {account.email}
                   </Typography>
                 </Box>
 
                 <Chip
-                  label={getStatusLabel(account.status)}
-                  color={getStatusColor(account.status)}
+                  label={getStatusLabel(account.is_active)}
+                  color={getStatusColor(account.is_active)}
                   size="small"
                   variant="outlined"
                 />
               </Box>
 
               <Box className={styles.mobileInfo}>
-                <Typography>Email: {account.email}</Typography>
-                <Typography>Role: {account.role}</Typography>
-                <Typography>Created At: {account.createdAt}</Typography>
+                <Typography>STT: {getRowNumber(index, page, rowsPerPage)}</Typography>
+                <Typography>Role: {getRoleLabel(account.role)}</Typography>
+                <Typography>Created At: {normalizeDate(account.created_at)}</Typography>
+                <Typography>Last Login: {normalizeDate(account.last_login_at)}</Typography>
               </Box>
 
               <Stack direction="row" spacing={1} className={styles.mobileActions}>
@@ -392,32 +692,35 @@ export function AccountManagementPage() {
                 <Button
                   size="small"
                   variant="outlined"
-                  startIcon={
-                    account.status === "ACTIVE" ? (
-                      <LockRoundedIcon />
-                    ) : (
-                      <LockOpenRoundedIcon />
-                    )
-                  }
-                  onClick={() => handleToggleStatus(account.id)}
+                  startIcon={account.is_active ? <LockRoundedIcon /> : <LockOpenRoundedIcon />}
+                  onClick={() => handleToggleStatus(account)}
                 >
-                  {account.status === "ACTIVE" ? "Lock" : "Unlock"}
+                  {account.is_active ? "Lock" : "Unlock"}
                 </Button>
 
                 <Button
                   size="small"
-                  color="error"
                   variant="outlined"
-                  startIcon={<DeleteOutlineRoundedIcon />}
-                  onClick={() => handleDelete(account.id)}
+                  startIcon={<VpnKeyRoundedIcon />}
+                  onClick={() => handleOpenResetPassword(account)}
                 >
-                  Delete
+                  Reset
+                </Button>
+
+                <Button
+                  size="small"
+                  color="warning"
+                  variant="outlined"
+                  startIcon={<LogoutRoundedIcon />}
+                  onClick={() => handleRevokeSessions(account)}
+                >
+                  Revoke
                 </Button>
               </Stack>
             </Paper>
           ))}
 
-          {!filteredAccounts.length ? (
+          {!isLoading && !accounts.length ? (
             <Box className={styles.emptyState}>
               No matching accounts found.
             </Box>
@@ -425,25 +728,16 @@ export function AccountManagementPage() {
         </Box>
       </Paper>
 
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>
-          {editingAccount ? "Update Account" : "Create New Account"}
-        </DialogTitle>
+      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+        <DialogTitle>{dialogTitle}</DialogTitle>
 
         <DialogContent>
           <Box className={styles.formGrid}>
-
             <TextField
-              label="Username"
-              value={form.username}
-              onChange={(e) => handleChange("username", e.target.value)}
+              label="Full name"
+              value={form.full_name}
+              onChange={(e) => handleChange("full_name", e.target.value)}
               fullWidth
-              required
             />
 
             <TextField
@@ -453,7 +747,21 @@ export function AccountManagementPage() {
               onChange={(e) => handleChange("email", e.target.value)}
               fullWidth
               required
+              disabled={Boolean(editingAccount)}
+              helperText={editingAccount ? "Email cannot be changed from this screen." : ""}
             />
+
+            {!editingAccount && (
+              <TextField
+                label="Password"
+                type="password"
+                value={form.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+                fullWidth
+                required
+                helperText="Minimum 8 characters"
+              />
+            )}
 
             <TextField
               select
@@ -462,9 +770,9 @@ export function AccountManagementPage() {
               onChange={(e) => handleChange("role", e.target.value)}
               fullWidth
             >
-              {roles.map((role) => (
-                <MenuItem key={role} value={role}>
-                  {role}
+              {roleOptions.map((role) => (
+                <MenuItem key={role.value} value={role.value}>
+                  {role.label}
                 </MenuItem>
               ))}
             </TextField>
@@ -486,9 +794,66 @@ export function AccountManagementPage() {
         </DialogContent>
 
         <DialogActions className={styles.dialogActions}>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave}>
-            Save
+          <Button onClick={handleCloseDialog} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <CircularProgress size={22} color="inherit" /> : "Save"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(resetPasswordAccount)}
+        onClose={handleCloseResetPassword}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Reset Password</DialogTitle>
+
+        <DialogContent>
+          <Box className={styles.formGrid}>
+            <Typography className={styles.resetText}>
+              Account: <strong>{resetPasswordAccount?.email}</strong>
+            </Typography>
+
+            <TextField
+              label="New password"
+              type="password"
+              value={resetPasswordForm.new_password}
+              onChange={(e) =>
+                setResetPasswordForm((prev) => ({
+                  ...prev,
+                  new_password: e.target.value,
+                }))
+              }
+              fullWidth
+              required
+              helperText="Minimum 8 characters"
+            />
+
+            <TextField
+              label="Confirm password"
+              type="password"
+              value={resetPasswordForm.confirm_password}
+              onChange={(e) =>
+                setResetPasswordForm((prev) => ({
+                  ...prev,
+                  confirm_password: e.target.value,
+                }))
+              }
+              fullWidth
+              required
+            />
+          </Box>
+        </DialogContent>
+
+        <DialogActions className={styles.dialogActions}>
+          <Button onClick={handleCloseResetPassword} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleResetPassword} disabled={isSaving}>
+            {isSaving ? <CircularProgress size={22} color="inherit" /> : "Reset"}
           </Button>
         </DialogActions>
       </Dialog>
