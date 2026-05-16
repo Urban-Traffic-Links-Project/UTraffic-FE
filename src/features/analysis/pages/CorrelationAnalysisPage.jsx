@@ -420,7 +420,14 @@ function EgoSidebar({ selectedNode, egoData, onReset, filters, onFilterChange, n
         <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ mb: 1, display: "block" }}>
           TOP 10 TƯƠNG QUAN CAO NHẤT
         </Typography>
-        {top10.length ? (
+        {egoData.is_error ? (
+          <Box sx={{ p: 2, borderRadius: 2, border: "1px dashed", borderColor: "error.main", bgcolor: "rgba(211,47,47,0.05)" }}>
+            <Typography variant="body2" fontWeight={700} color="error.main">Không có dữ liệu (404)</Typography>
+            <Typography variant="caption" color="error.main">
+              Thời điểm này chưa có dữ liệu tương quan (có thể do khoảng thời gian warm-up của model). Vui lòng chọn khung giờ khác.
+            </Typography>
+          </Box>
+        ) : top10.length ? (
           <Stack spacing={0.75}>
             {top10.map((nb, i) => (
               <Box key={nb.id} sx={{ display: "flex", alignItems: "center", gap: 1, p: 1, borderRadius: 2, bgcolor: "action.hover" }}>
@@ -506,7 +513,7 @@ export function CorrelationAnalysisPage() {
   const [focusMode, setFocusMode]       = useState(false);
   const [egoData, setEgoData]           = useState(null);
   const [egoLoading, setEgoLoading]     = useState(false);
-  const [filters, setFilters]           = useState({ maxDist: 1000, minCorr: 0.5 });
+  const [filters, setFilters]           = useState({ maxDist: 500, minCorr: 0.3 });
 
   // Snapshot selection state
   const [selectedDate, setSelectedDate] = useState(null);
@@ -531,23 +538,40 @@ export function CorrelationAnalysisPage() {
     staleTime: 5 * 60_000,
   });
 
-  // Thay thế onSuccess (v5) bằng useEffect để tự động chọn snapshot khi có data
-  useEffect(() => {
-    if (!snapshotsQuery.data) return;
-    const data = snapshotsQuery.data;
-    
-    // Chỉ set nếu chưa chọn gì
-    if (selectedDate && selectedSlot) return;
-
-    // Luôn ưu tiên chọn ngày nhỏ nhất và khung giờ nhỏ nhất
-    if (data.dates?.length > 0 && data.slots?.length > 0) {
-      setSelectedDate(data.dates[0]);
-      setSelectedSlot(data.slots[0]);
-    }
-  }, [snapshotsQuery.data, selectedDate, selectedSlot]);
-
   const dates = snapshotsQuery.data?.dates ?? [];
-  const slots = snapshotsQuery.data?.slots ?? [];
+  const allSnapshots = snapshotsQuery.data?.snapshots ?? [];
+
+  // Lọc danh sách slots khả dụng cho ngày đang chọn để slider không cho phép chọn giờ lỗi
+  const slots = useMemo(() => {
+    if (!selectedDate || allSnapshots.length === 0) return snapshotsQuery.data?.slots ?? [];
+    const validSlots = allSnapshots
+      .filter((s) => s.date === selectedDate)
+      .map((s) => s.slot);
+    return Array.from(new Set(validSlots)).sort();
+  }, [selectedDate, allSnapshots, snapshotsQuery.data?.slots]);
+
+  // Tự động chọn snapshot mặc định khi load hoặc khi đổi ngày mà slot cũ không còn hợp lệ
+  useEffect(() => {
+    if (!snapshotsQuery.data || snapshotsQuery.data.snapshots.length === 0) return;
+    
+    const data = snapshotsQuery.data;
+    const currentDayValid = selectedDate && slots.includes(selectedSlot);
+
+    if (!selectedDate || !selectedSlot || !currentDayValid) {
+      const nextDate = selectedDate || data.dates[0];
+      const nextSlots = allSnapshots
+        .filter(s => s.date === nextDate)
+        .map(s => s.slot);
+      const uniqueNextSlots = Array.from(new Set(nextSlots)).sort();
+
+      if (uniqueNextSlots.length > 0) {
+        setSelectedDate(nextDate);
+        // Ưu tiên chọn Slot_0815 làm mặc định theo yêu cầu của user, nếu không có thì lấy slot đầu tiên
+        const preferredSlot = uniqueNextSlots.includes("Slot_0815") ? "Slot_0815" : uniqueNextSlots[0];
+        setSelectedSlot(preferredSlot);
+      }
+    }
+  }, [snapshotsQuery.data, selectedDate, selectedSlot, slots, allSnapshots]);
 
   // mode_key hiện tại
   const currentSnapshotMode = selectedDate && selectedSlot
@@ -568,7 +592,19 @@ export function CorrelationAnalysisPage() {
       setFocusMode(true);
     } catch (err) {
       console.error("fetchCorrelation error:", err);
-      // Không clear egoData khi lỗi — giữ dữ liệu cũ
+      // Hiển thị trạng thái rỗng thay vì đóng sidebar đột ngột
+      const modeStr = snapshotMode || "";
+      const isUnderscore = modeStr.includes("_");
+      setEgoData({
+        snapshot_mode: modeStr,
+        snapshot_date: isUnderscore ? modeStr.split("_")[0] : null,
+        snapshot_slot: isUnderscore ? modeStr.split("_")[1] : null,
+        selected: node,
+        neighbors: [],
+        total: 0,
+        is_error: true,
+      });
+      setFocusMode(true);
     } finally {
       setEgoLoading(false);
     }

@@ -136,8 +136,8 @@ function MapController({
 
   // Click nền bản đồ → thoát focus
   useMapEvents({
-    click: (e) => {
-      if (!e.originalEvent._nodeClick) onMapClick();
+    click: () => {
+      onMapClick();
     },
     zoomend: () => drawNodes(),
   });
@@ -186,7 +186,7 @@ function MapController({
 
         // Click handler
         circle.on("click", (e) => {
-          e.originalEvent._nodeClick = true;
+          L.DomEvent.stopPropagation(e); // Chặn event lan ra map
           onNodeClick(node);
         });
 
@@ -236,7 +236,7 @@ function MapController({
         const circle = makeCircle(latlng, radius, color, opacity, weight);
 
         circle.on("click", (e) => {
-          e.originalEvent._nodeClick = true;
+          L.DomEvent.stopPropagation(e);
           onNodeClick(node);
         });
 

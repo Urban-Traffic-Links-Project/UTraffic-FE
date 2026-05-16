@@ -9,6 +9,7 @@ import {
   Popup,
   TileLayer,
   useMap,
+  useMapEvents,
   CircleMarker,
 } from "react-leaflet";
 import styles from "../pages/PredictCongestionPage.module.css";
@@ -89,6 +90,15 @@ function MapViewportController({ selected, affectedItems = [] }) {
     });
   }, [map, path, center, affectedItems]);
 
+  return null;
+}
+
+function MapEventsHandler({ onMapClick }) {
+  useMapEvents({
+    click: () => {
+      if (onMapClick) onMapClick(null);
+    },
+  });
   return null;
 }
 
@@ -242,6 +252,7 @@ export function SelectedSegmentMap({ selected, incidents = [], affectedItems = [
           />
 
           <MapViewportController selected={selected} affectedItems={affectedItems} />
+          <MapEventsHandler onMapClick={onSelect} />
 
           {/* Incident overlay (matched edges) */}
           {incidentFeatures.length ? (
@@ -270,7 +281,8 @@ export function SelectedSegmentMap({ selected, incidents = [], affectedItems = [
                   .filter(Boolean)
                   .join("<br/>");
                 layer.bindPopup(title);
-                layer.on('click', () => {
+                layer.on('click', (e) => {
+                  L.DomEvent.stopPropagation(e); // Ngăn click lan tới map background
                   if (onSelect && p.incident_id) {
                     onSelect(p.incident_id);
                   }
@@ -314,6 +326,11 @@ export function SelectedSegmentMap({ selected, incidents = [], affectedItems = [
                   fillColor: color,
                   fillOpacity: 0.7,
                   weight: 2,
+                }}
+                eventHandlers={{
+                  click: (e) => {
+                    L.DomEvent.stopPropagation(e);
+                  },
                 }}
               >
                 <Popup>
