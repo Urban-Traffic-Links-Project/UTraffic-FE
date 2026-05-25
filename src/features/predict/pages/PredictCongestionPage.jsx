@@ -30,7 +30,7 @@ export function PredictCongestionPage() {
   const { selectedSegmentId, setSelectedSegmentId } = usePredictStore();
   const [horizon, setHorizon] = useState(1);
   const [mode, setMode] = useState("spread"); // "spread" or "cause"
-  const [radius, setRadius] = useState(3.0);
+  const [radius, setRadius] = useState(1.0);
 
 
   const incidentsQuery = useQuery({
@@ -45,9 +45,9 @@ export function PredictCongestionPage() {
     if (!inc) return null;
     return {
       id: inc.id,
-      name: inc.raw_properties?.from && inc.raw_properties?.to 
-          ? `${inc.raw_properties.from} → ${inc.raw_properties.to}` 
-          : "Sự cố",
+      name: inc.raw_properties?.from && inc.raw_properties?.to
+        ? `${inc.raw_properties.from} → ${inc.raw_properties.to}`
+        : "Sự cố",
       geometry: inc.geometry,
     };
   }, [incidentsQuery.data, selectedSegmentId]);
@@ -124,12 +124,12 @@ export function PredictCongestionPage() {
                 const location = fromStreet && toStreet ? `${fromStreet} → ${toStreet}` : (fromStreet || toStreet || "Không rõ đường");
 
                 const cat = Number(inc.icon_category);
-                const color = 
+                const color =
                   cat === 1 ? "#d32f2f" : // Accident -> Red
-                  cat === 6 ? "#f57c00" : // Jam -> Orange
-                  cat === 8 ? "#7b1fa2" : // RoadClosed -> Purple
-                  cat === 9 ? "#1976d2" : // RoadWorks -> Blue
-                  "#757575";             // Default -> Grey
+                    cat === 6 ? "#f57c00" : // Jam -> Orange
+                      cat === 8 ? "#7b1fa2" : // RoadClosed -> Purple
+                        cat === 9 ? "#1976d2" : // RoadWorks -> Blue
+                          "#757575";             // Default -> Grey
 
                 return (
                   <Card
@@ -146,7 +146,7 @@ export function PredictCongestionPage() {
                       cursor: "pointer",
                       transition: "all 0.2s ease-in-out",
                       "&:hover": {
-                         borderColor: color,
+                        borderColor: color,
                       }
                     }}
                   >
@@ -242,7 +242,7 @@ export function PredictCongestionPage() {
                 <ToggleButton value="cause">Nguyên nhân gây ùn tắc</ToggleButton>
               </ToggleButtonGroup>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                {mode === "spread" 
+                {mode === "spread"
                   ? "Xem các đoạn đường sẽ bị kết xe do sự cố này."
                   : "Xem đâu là nguồn gốc dẫn đến sự cố này."}
               </Typography>
@@ -252,9 +252,9 @@ export function PredictCongestionPage() {
 
         {/* Map top */}
         <Box sx={{ mt: 2 }}>
-          <SelectedSegmentMap 
-            selected={selected} 
-            incidents={incidentsQuery.data?.incidents || []} 
+          <SelectedSegmentMap
+            selected={selected}
+            incidents={incidentsQuery.data?.incidents || []}
             affectedItems={affectedQuery.data?.items || []}
             arrows={spreadQuery.data?.arrows || []}
             origin={spreadQuery.data?.center}
