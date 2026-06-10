@@ -86,13 +86,10 @@ function horizonColor(h) {
 }
 
 // ─── Slider marks ─────────────────────────────────────────────────────────────
-const HORIZON_MARKS = [
-  { value: 0, label: "0" },
-  { value: 1, label: "15p" },
-  { value: 3, label: "45p" },
-  { value: 6, label: "90p" },
-  { value: 9, label: "135p" },
-];
+const HORIZON_MARKS = Array.from({ length: 10 }, (_, i) => ({
+  value: i,
+  label: [0, 1, 3, 6, 9].includes(i) ? (i === 0 ? "0" : `${i * 15}p`) : "",
+}));
 
 // ─── HorizonSlider ────────────────────────────────────────────────────────────
 function HorizonSlider({ horizon, onChange }) {
@@ -110,6 +107,10 @@ function HorizonSlider({ horizon, onChange }) {
         borderColor: "divider",
         borderRadius: 3,
         p: 2.5,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
         background: draft === 0
           ? "linear-gradient(135deg, rgba(25,118,210,0.04) 0%, rgba(21,101,192,0.02) 100%)"
           : "linear-gradient(135deg, rgba(46,125,50,0.04) 0%, rgba(27,94,32,0.02) 100%)",
@@ -284,7 +285,7 @@ function ForecastTimePicker({ dates, slots, selectedDate, selectedSlot, onChange
             value={draftSlotIdx}
             onChange={(_, v) => setDraftSlotIdx(v)}
             onChangeCommitted={(_, v) => onChange(dates[draftDateIdx] ?? selectedDate, slots[v])}
-            marks={slots.filter((_, i) => i % 3 === 0).map((s) => ({ value: slots.indexOf(s), label: slotToTime(s) }))}
+            marks={slots.map((s, i) => ({ value: i, label: i % 3 === 0 ? slotToTime(s) : "" }))}
             valueLabelDisplay="auto"
             valueLabelFormat={(v) => slotToTime(slots[v] ?? "")}
             sx={{

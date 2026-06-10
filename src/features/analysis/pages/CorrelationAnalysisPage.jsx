@@ -169,7 +169,7 @@ function SnapshotSelector({ dates, slots, selectedDate, selectedSlot, onChange, 
             value={draftSlotIdx}
             onChange={(_, v) => setDraftSlotIdx(v)}
             onChangeCommitted={(_, v) => onChange(dates[draftDateIdx] ?? selectedDate, slots[v])}
-            marks={slots.filter((_, i) => i % 3 === 0).map((s) => ({ value: slots.indexOf(s), label: slotToTime(s) }))}
+            marks={slots.map((s, i) => ({ value: i, label: i % 3 === 0 ? slotToTime(s) : "" }))}
             valueLabelDisplay="auto"
             valueLabelFormat={(v) => slotToTime(slots[v] ?? "")}
             sx={{
@@ -812,18 +812,18 @@ export function CorrelationAnalysisPage() {
                 <Typography variant="caption" color="text.secondary">Đang tải DMFM snapshots...</Typography>
               </Box>
             ) : fctDates.length > 0 ? (
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={7}>
+              <Stack direction={{ xs: "column", lg: "row" }} spacing={3} sx={{ width: "100%" }}>
+                <Box sx={{ flex: 6 }}>
                   <ForecastTimePicker
                     dates={fctDates} slots={fctSlots}
                     selectedDate={fctDate} selectedSlot={fctSlot}
                     onChange={handleFctTimeChange} disabled={fctLoading}
                   />
-                </Grid>
-                <Grid item xs={12} md={5}>
+                </Box>
+                <Box sx={{ flex: 4 }}>
                   <HorizonSlider horizon={fctHorizon} onChange={handleFctHorizonChange} />
-                </Grid>
-              </Grid>
+                </Box>
+              </Stack>
             ) : (
               <Box sx={{ p: 2, bgcolor: "#fff", borderRadius: 3, border: "1px dashed #ef4444" }}>
                 <Typography variant="caption" color="warning.main" fontWeight={700}>
