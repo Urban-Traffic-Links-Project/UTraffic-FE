@@ -5,7 +5,7 @@
  */
 import { httpGet } from "../../../shared/lib/http";
 
-/** Lấy tất cả 305 nodes với tọa độ thật — gọi 1 lần khi load trang */
+/** Lấy tất cả nodes với tọa độ thật — gọi 1 lần khi load trang */
 export async function fetchNodes() {
   const data = await httpGet("/api/v1/traffic/nodes");
   // Normalize về format {id, osm_node_id, lat, lng, ...}

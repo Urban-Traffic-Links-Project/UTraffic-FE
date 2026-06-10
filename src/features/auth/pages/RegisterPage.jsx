@@ -54,7 +54,7 @@ export function RegisterPage() {
   const canSubmit = useMemo(() => {
     if (!fullName.trim()) return false;
     if (!email.trim()) return false;
-    if (pw.length < 6) return false;
+    if (pw.length < 8) return false;
     if (pw !== cpw) return false;
     if (loading) return false;
     return true;
@@ -129,7 +129,7 @@ export function RegisterPage() {
           <Card className={styles.card} elevation={0}>
             <CardContent className={styles.cardContent}>
               <Typography className={styles.title}>
-                Sign up to HCMTraffic
+                Sign up to UTraffic
               </Typography>
 
               <Box component="form" onSubmit={handleSubmit} className={styles.form}>
@@ -211,8 +211,8 @@ export function RegisterPage() {
                 </Button>
 
                 <Typography className={styles.hint}>
-                  {pw && pw.length < 6
-                    ? "Password should be at least 6 characters."
+                  {pw && pw.length < 8
+                    ? "Password should be at least 8 characters."
                     : ""}
                   {pw && cpw && pw !== cpw ? " Passwords do not match." : ""}
                 </Typography>

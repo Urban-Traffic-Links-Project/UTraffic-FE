@@ -2,7 +2,7 @@
  * NodeCorrelationMap.jsx
  *
  * Bản đồ Leaflet với 3 tính năng chính:
- *  1. Hiển thị 305 nodes thật lên bản đồ
+ *  1. Hiển thị nodes thật lên bản đồ
  *  2. Semantic Zooming — zoom thấp: dot nhỏ / zoom cao: dot lớn + label
  *  3. Ego-Network Focus — click node: dim toàn bộ, highlight node + neighbors + lines
  */
@@ -136,8 +136,8 @@ function MapController({
 
   // Click nền bản đồ → thoát focus
   useMapEvents({
-    click: (e) => {
-      if (!e.originalEvent._nodeClick) onMapClick();
+    click: () => {
+      onMapClick();
     },
     zoomend: () => drawNodes(),
   });
@@ -161,12 +161,12 @@ function MapController({
     if (!nodes?.length) return;
 
     // ---------- EGO-NETWORK MODE ----------
-    if (focusMode && egoData) {
-      const { selected, neighbors } = egoData;
-      const neighborMap = new Map(neighbors.map((n) => [n.id, n]));
+    if (focusMode && egoData && egoData.selected) {
+      const { selected, neighbors = [] } = egoData;
+      const neighborMap = new Map((neighbors || []).map((n) => [n.id, n]));
 
       nodes.forEach((node) => {
-        const isSelected = node.osm_node_id === selected.osm_node_id;
+        const isSelected = selected && node.osm_node_id === selected.osm_node_id;
         const neighbor = neighborMap.get(node.id);
         const isNeighbor = Boolean(neighbor);
 
@@ -186,7 +186,7 @@ function MapController({
 
         // Click handler
         circle.on("click", (e) => {
-          e.originalEvent._nodeClick = true;
+          L.DomEvent.stopPropagation(e); // Chặn event lan ra map
           onNodeClick(node);
         });
 
@@ -236,7 +236,7 @@ function MapController({
         const circle = makeCircle(latlng, radius, color, opacity, weight);
 
         circle.on("click", (e) => {
-          e.originalEvent._nodeClick = true;
+          L.DomEvent.stopPropagation(e);
           onNodeClick(node);
         });
 
@@ -264,7 +264,7 @@ function MapController({
   useEffect(() => {
     map.invalidateSize({ animate: false });
 
-    if (!focusMode || !egoData) return;
+    if (!focusMode || !egoData || !egoData.selected) return;
 
     const allPoints = [egoData.selected, ...(egoData.neighbors ?? [])]
       .map(getLatLng)
@@ -329,7 +329,7 @@ export function NodeCorrelationMap({
         center={HCMC}
         zoom={16}
         scrollWheelZoom
-        style={{ width: "100%", height, borderRadius: 12 }}
+        style={{ width: "100%", height: "100%" }}
       >
         <TileLayer
           attribution='&copy; OpenStreetMap'

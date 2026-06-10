@@ -1,24 +1,24 @@
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Checkbox,
-  CircularProgress,
-  Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  IconButton,
-  InputAdornment,
-  Link as MuiLink,
-  TextField,
-  Typography,
+    Alert,
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Checkbox,
+    CircularProgress,
+    Container,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    FormControlLabel,
+    IconButton,
+    InputAdornment,
+    Link as MuiLink,
+    TextField,
+    Typography,
 } from "@mui/material";
 import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -294,7 +294,7 @@ export function LoginPage() {
         <Box className={styles.grid}>
           <Card className={styles.card} elevation={0}>
             <CardContent className={styles.cardContent}>
-              <Typography className={styles.title}>Login to HCMTraffic</Typography>
+              <Typography className={styles.title}>Login to UTraffic</Typography>
 
               <Box component="form" onSubmit={handleSubmit} className={styles.form}>
                 {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
