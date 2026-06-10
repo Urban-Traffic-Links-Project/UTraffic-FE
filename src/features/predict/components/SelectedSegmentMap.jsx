@@ -44,22 +44,24 @@ L.Icon.Default.mergeOptions({
   ).toString(),
 });
 
-function MapViewportController({ selected, affectedItems = [] }) {
+function MapViewportController({ selected, affectedItems = [], incidents = [] }) {
   const map = useMap();
 
   const path = useMemo(() => normalizeSegmentPath(selected), [selected]);
   const center = useMemo(() => getSegmentCenter(selected, path), [selected, path]);
 
   useEffect(() => {
-    // đảm bảo map tính lại kích thước nếu vừa render xong trong container động
+    // Đảm bảo map tính lại kích thước nếu vừa render xong hoặc các thành phần xung quanh thay đổi chiều cao
     const timer = setTimeout(() => {
-      map.invalidateSize();
-    }, 150);
+      map.invalidateSize({ animate: false });
+    }, 250);
 
     return () => clearTimeout(timer);
-  }, [map]);
+  }, [map, incidents?.length, selected, affectedItems?.length]);
 
   useEffect(() => {
+    if (!selected) return; // Không thay đổi góc nhìn khi hủy chọn sự cố
+
     const collectivePoints = [...path];
     
     affectedItems.forEach(item => {
@@ -84,11 +86,8 @@ function MapViewportController({ selected, affectedItems = [] }) {
       });
       return;
     }
+  }, [map, path, center, affectedItems, selected]);
 
-    map.flyTo(BBOX_CENTER, DEFAULT_ZOOM, {
-      duration: 0.8,
-    });
-  }, [map, path, center, affectedItems]);
 
   return null;
 }
@@ -236,6 +235,22 @@ export function SelectedSegmentMap({ selected, incidents = [], affectedItems = [
     return affectedItems.filter(item => item.lat && item.lng);
   }, [affectedItems]);
 
+  const geojsonKey = useMemo(() => {
+    if (!incidents || incidents.length === 0) return "inc-empty";
+    const first = incidents[0];
+    const last = incidents[incidents.length - 1];
+    return `inc-${incidents.length}-${first.id}-${first.fetched_at}-${last.id}-${last.fetched_at}`;
+  }, [incidents]);
+
+  const formatDelayMinutesSeconds = (seconds) => {
+    if (seconds == null) return "";
+    const s = Math.round(Number(seconds));
+    if (s < 60) return `${s} giây`;
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return rem > 0 ? `${m} phút ${rem} giây` : `${m} phút`;
+  };
+
   return (
     <Box className={styles.mapBlock}>
 
@@ -251,13 +266,13 @@ export function SelectedSegmentMap({ selected, incidents = [], affectedItems = [
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           />
 
-          <MapViewportController selected={selected} affectedItems={affectedItems} />
+          <MapViewportController selected={selected} affectedItems={affectedItems} incidents={incidents} />
           <MapEventsHandler onMapClick={onSelect} />
 
           {/* Incident overlay (matched edges) */}
           {incidentFeatures.length ? (
             <GeoJSON
-              key={`inc-${incidentFeatures.length}`}
+              key={geojsonKey}
               data={{ type: "FeatureCollection", features: incidentFeatures }}
               style={(feature) => {
                 const p = feature?.properties || {};
@@ -276,7 +291,9 @@ export function SelectedSegmentMap({ selected, incidents = [], affectedItems = [
                 const title = [
                   `Loại: ${p.icon_category_label ?? p.icon_category ?? "Không xác định"}`,
                   p.magnitude_of_delay ? `Mức độ trễ: ${p.magnitude_of_delay}` : null,
-                  p.delay_seconds !== null && p.delay_seconds !== undefined ? `Thời gian trễ(s): ${p.delay_seconds}` : null,
+                  p.delay_seconds !== null && p.delay_seconds !== undefined 
+                    ? `Thời gian trễ: ${formatDelayMinutesSeconds(p.delay_seconds)}` 
+                    : null,
                 ]
                   .filter(Boolean)
                   .join("<br/>");
@@ -296,11 +313,12 @@ export function SelectedSegmentMap({ selected, incidents = [], affectedItems = [
               <Polyline
                 positions={path}
                 pathOptions={{
-                  color: "#d32f2f",
-                  weight: 7,
-                  opacity: 0.9,
+                  color: "#00b0ff",
+                  weight: 8,
+                  opacity: 0.95,
                 }}
               />
+
               <Marker position={path[Math.floor(path.length / 2)]}>
                 <Popup>{selected?.name || "Đoạn đường đang chọn"}</Popup>
               </Marker>

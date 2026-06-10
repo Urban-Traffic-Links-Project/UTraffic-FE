@@ -20,6 +20,7 @@ import {
   IconButton,
   Tooltip,
   LinearProgress,
+  Grid,
 } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
@@ -209,80 +210,92 @@ function ForecastTimePicker({ dates, slots, selectedDate, selectedSlot, onChange
   return (
     <Paper
       elevation={0}
+      variant="outlined"
       sx={{
         border: "1px solid",
         borderColor: "divider",
         borderRadius: 3,
         p: 2.5,
         background: "linear-gradient(135deg, rgba(103,58,183,0.04) 0%, rgba(81,45,168,0.02) 100%)",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
       }}
     >
-      {/* Header */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-        <AccessTimeIcon sx={{ fontSize: 18, color: "secondary.main" }} />
-        <Typography variant="subtitle2" fontWeight={800} color="secondary.main">
-          Chọn thời điểm gốc T
+      {/* Row 1: Header Inline */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2, flexWrap: "nowrap", width: "100%", overflow: "hidden" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
+          <AccessTimeIcon sx={{ fontSize: 18, color: "secondary.main" }} />
+          <Typography variant="subtitle2" fontWeight={800} color="secondary.main" sx={{ fontSize: "0.875rem", whiteSpace: "nowrap" }}>
+            Thời điểm gốc T
+          </Typography>
+        </Box>
+        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          (Chọn thời điểm bắt đầu)
         </Typography>
         <Box sx={{ flex: 1 }} />
-        <Chip
-          size="small"
-          label={selectedDate && selectedSlot
-            ? `${dateToShort(selectedDate)} · ${slotToTime(selectedSlot)}`
-            : "..."}
-          color="secondary"
-          sx={{ fontWeight: 700, fontSize: "0.75rem" }}
-        />
+        {selectedDate && selectedSlot && (
+          <Chip
+            size="small"
+            label={`${dateToShort(selectedDate)} · ${slotToTime(selectedSlot)}`}
+            color="secondary"
+            sx={{ fontWeight: 700, fontSize: "0.72rem", flexShrink: 0 }}
+          />
+        )}
       </Box>
 
-      {/* Date slider */}
-      <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
-          <CalendarTodayIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-          <Typography variant="caption" color="text.secondary" fontWeight={700}>NGÀY</Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>{draftDate}</Typography>
+      {/* Row 2: Sliders side-by-side */}
+      <Stack direction={{ xs: "column", md: "row" }} spacing={4} sx={{ width: "100%" }}>
+        {/* Date slider Column */}
+        <Box sx={{ flex: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 0.5, width: "100%" }}>
+            <CalendarTodayIcon sx={{ fontSize: 12, color: "text.secondary", mr: 0.5 }} />
+            <Typography variant="caption" color="text.secondary" fontWeight={700}>NGÀY</Typography>
+            <Typography variant="caption" color="secondary.main" fontWeight={700} sx={{ ml: "auto" }}>{draftDate}</Typography>
+          </Box>
+          <Slider
+            disabled={disabled || dates.length === 0}
+            min={0} max={Math.max(0, dates.length - 1)} step={1}
+            value={draftDateIdx}
+            onChange={(_, v) => setDraftDateIdx(v)}
+            onChangeCommitted={(_, v) => onChange(dates[v], slots[draftSlotIdx] ?? selectedSlot)}
+            marks={dates.map((d, i) => ({ value: i, label: dateToShort(d) }))}
+            valueLabelDisplay="off"
+            sx={{
+              width: "100%",
+              "& .MuiSlider-markLabel": { fontSize: "0.62rem", color: "text.secondary" },
+              "& .MuiSlider-mark": { height: 5 },
+              color: "secondary.main",
+            }}
+          />
         </Box>
-        <Slider
-          disabled={disabled || dates.length === 0}
-          min={0} max={Math.max(0, dates.length - 1)} step={1}
-          value={draftDateIdx}
-          onChange={(_, v) => setDraftDateIdx(v)}
-          onChangeCommitted={(_, v) => onChange(dates[v], slots[draftSlotIdx] ?? selectedSlot)}
-          marks={dates.map((d, i) => ({ value: i, label: dateToShort(d) }))}
-          valueLabelDisplay="off"
-          sx={{
-            color: "secondary.main",
-            "& .MuiSlider-markLabel": { fontSize: "0.65rem", color: "text.secondary" },
-            "& .MuiSlider-mark": { height: 6 },
-          }}
-        />
-      </Box>
 
-      {/* Slot slider */}
-      <Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
-          <AccessTimeIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-          <Typography variant="caption" color="text.secondary" fontWeight={700}>KHUNG GIỜ (15 phút)</Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>{slotToTime(draftSlot)}</Typography>
+        {/* Slot slider Column */}
+        <Box sx={{ flex: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 0.5, width: "100%" }}>
+            <AccessTimeIcon sx={{ fontSize: 12, color: "text.secondary", mr: 0.5 }} />
+            <Typography variant="caption" color="text.secondary" fontWeight={700}>KHUNG GIỜ (15 phút)</Typography>
+            <Typography variant="caption" color="secondary.main" fontWeight={700} sx={{ ml: "auto" }}>{slotToTime(draftSlot)}</Typography>
+          </Box>
+          <Slider
+            disabled={disabled || slots.length === 0}
+            min={0} max={Math.max(0, slots.length - 1)} step={1}
+            value={draftSlotIdx}
+            onChange={(_, v) => setDraftSlotIdx(v)}
+            onChangeCommitted={(_, v) => onChange(dates[draftDateIdx] ?? selectedDate, slots[v])}
+            marks={slots.filter((_, i) => i % 3 === 0).map((s) => ({ value: slots.indexOf(s), label: slotToTime(s) }))}
+            valueLabelDisplay="auto"
+            valueLabelFormat={(v) => slotToTime(slots[v] ?? "")}
+            sx={{
+              width: "100%",
+              color: "secondary.main",
+              "& .MuiSlider-markLabel": { fontSize: "0.62rem", color: "text.secondary" },
+              "& .MuiSlider-mark": { height: 5 },
+            }}
+          />
         </Box>
-        <Slider
-          disabled={disabled || slots.length === 0}
-          min={0} max={Math.max(0, slots.length - 1)} step={1}
-          value={draftSlotIdx}
-          onChange={(_, v) => setDraftSlotIdx(v)}
-          onChangeCommitted={(_, v) => onChange(dates[draftDateIdx] ?? selectedDate, slots[v])}
-          marks={slots.filter((_, i) => i % 3 === 0).map((s) => ({
-            value: slots.indexOf(s),
-            label: slotToTime(s),
-          }))}
-          valueLabelDisplay="auto"
-          valueLabelFormat={(v) => slotToTime(slots[v] ?? "")}
-          sx={{
-            color: "secondary.main",
-            "& .MuiSlider-markLabel": { fontSize: "0.65rem", color: "text.secondary" },
-            "& .MuiSlider-mark": { height: 6 },
-          }}
-        />
-      </Box>
+      </Stack>
     </Paper>
   );
 }

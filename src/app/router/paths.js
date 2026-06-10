@@ -6,6 +6,7 @@ export const PATHS = {
   incidents: "/incidents",
   dashboard: "/dashboard",
   login: "/login",
+
   signup: "/signup",
   admin: "/admin",
 };

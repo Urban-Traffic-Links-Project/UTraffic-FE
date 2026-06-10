@@ -9,10 +9,10 @@ import { LoginPage } from "../../features/auth/pages/LoginPage";
 import { RegisterPage } from "../../features/auth/pages/RegisterPage";
 import { TrafficDashboardPage } from "../../features/dashboard/pages/TrafficDashboardPage";
 import { HomePage } from "../../features/home/pages/HomePage";
-import { IncidentsPage } from "../../features/incidents/pages/IncidentsPage";
 import { PredictCongestionPage } from "../../features/predict/pages/PredictCongestionPage";
 import { TrafficDataPage } from "../../features/trafficData/pages/TrafficDataPage";
 import { AdminRoute } from "./AdminRoute";
+
 import { ProtectedRoute } from "./ProtectedRoute";
 
 export function AppRouter() {
@@ -59,12 +59,9 @@ export function AppRouter() {
 
         <Route
           path={PATHS.incidents}
-          element={
-            <ProtectedRoute>
-              <IncidentsPage />
-            </ProtectedRoute>
-          }
+          element={<Navigate to={PATHS.predict} replace />}
         />
+
 
         <Route path={PATHS.login} element={<LoginPage />} />
         <Route path={PATHS.signup} element={<RegisterPage />} />

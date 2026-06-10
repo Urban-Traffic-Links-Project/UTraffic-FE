@@ -34,6 +34,8 @@ const navItems = [
   { label: "Predict Congestion", to: "/predict" },
 ];
 
+
+
 function isAdminUser(user) {
   const role = String(user?.role || "").trim().toLowerCase();
 

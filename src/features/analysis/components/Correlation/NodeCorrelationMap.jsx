@@ -161,12 +161,12 @@ function MapController({
     if (!nodes?.length) return;
 
     // ---------- EGO-NETWORK MODE ----------
-    if (focusMode && egoData) {
-      const { selected, neighbors } = egoData;
-      const neighborMap = new Map(neighbors.map((n) => [n.id, n]));
+    if (focusMode && egoData && egoData.selected) {
+      const { selected, neighbors = [] } = egoData;
+      const neighborMap = new Map((neighbors || []).map((n) => [n.id, n]));
 
       nodes.forEach((node) => {
-        const isSelected = node.osm_node_id === selected.osm_node_id;
+        const isSelected = selected && node.osm_node_id === selected.osm_node_id;
         const neighbor = neighborMap.get(node.id);
         const isNeighbor = Boolean(neighbor);
 
@@ -264,7 +264,7 @@ function MapController({
   useEffect(() => {
     map.invalidateSize({ animate: false });
 
-    if (!focusMode || !egoData) return;
+    if (!focusMode || !egoData || !egoData.selected) return;
 
     const allPoints = [egoData.selected, ...(egoData.neighbors ?? [])]
       .map(getLatLng)
@@ -329,7 +329,7 @@ export function NodeCorrelationMap({
         center={HCMC}
         zoom={16}
         scrollWheelZoom
-        style={{ width: "100%", height, borderRadius: 12 }}
+        style={{ width: "100%", height: "100%" }}
       >
         <TileLayer
           attribution='&copy; OpenStreetMap'
